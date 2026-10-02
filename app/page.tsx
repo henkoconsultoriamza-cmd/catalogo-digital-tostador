@@ -1,10 +1,33 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CATEGORIES, DEFAULT_APP_SETTINGS, CART_KEY } from "./catalog-constants";
 import { DEFAULT_PRODUCTS, Product, Variant } from "./catalog-data";
 
 type CartItem = { product: Product; qty: number; variant?: Variant };
+
+// Shared order storage key with admin panel
+const ORDERS_KEY = "origen_orders_v1";
+
+type SavedOrder = {
+  id: string;
+  date: string;
+  clientId: string;
+  clientName: string;
+  clientType: "otro";
+  lines: Array<{
+    id: string;
+    description: string;
+    category: string;
+    qty: number;
+    unit: string;
+    unitPrice: number;
+  }>;
+  total: number;
+  kgCafe: number;
+  status: "pendiente";
+  notes: string;
+};
 
 const FMT_ARS = (n: number) =>
   "$ " + n.toLocaleString("es-AR", { maximumFractionDigits: 0 });
@@ -28,11 +51,6 @@ const IcoX = () => (
 const IcoSearch = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-);
-const IcoWA = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
   </svg>
 );
 const IcoMinus = () => (
@@ -258,113 +276,262 @@ function ProductModal({
 
 // ── Cart drawer ───────────────────────────────────────────────────────────────
 function CartDrawer({
-  items, settings, onClose, onUpdate, onRemove,
+  items, onClose, onUpdate, onRemove, onOrderPlaced,
 }: {
   items: CartItem[];
-  settings: typeof DEFAULT_APP_SETTINGS;
   onClose: () => void;
   onUpdate: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
+  onOrderPlaced: () => void;
 }) {
+  const [step, setStep] = useState<"cart" | "checkout" | "done">("cart");
+  const [name, setName]     = useState("");
+  const [phone, setPhone]   = useState("");
+  const [notes, setNotes]   = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   const total = items.reduce((s, i) => {
     const p = i.variant?.price ?? i.product.salePrice ?? i.product.price;
     return s + p * i.qty;
   }, 0);
 
-  const buildMsg = () => {
-    const lines = items.map(i => {
-      const p = i.variant?.price ?? i.product.salePrice ?? i.product.price;
-      const v = i.variant ? ` (${i.variant.label})` : "";
-      return `• ${i.product.name}${v} × ${i.qty} — ${FMT_ARS(p * i.qty)}`;
-    });
-    return encodeURIComponent(
-      `Hola! Quisiera hacer un pedido:\n\n${lines.join("\n")}\n\n*Total: ${FMT_ARS(total)}*`
-    );
+  const kgCafe = items
+    .filter(i => i.product.category === "Café")
+    .reduce((s, i) => s + i.qty, 0);
+
+  const saveOrder = () => {
+    if (!name.trim()) return;
+    setSubmitting(true);
+
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const order: SavedOrder = {
+      id: uid(),
+      date: new Date().toISOString().slice(0, 10),
+      clientId: "",
+      clientName: name.trim(),
+      clientType: "otro",
+      lines: items.map(i => {
+        const p = i.variant?.price ?? i.product.salePrice ?? i.product.price;
+        return {
+          id: uid(),
+          description: i.product.name + (i.variant ? ` (${i.variant.label})` : ""),
+          category: i.product.category,
+          qty: i.qty,
+          unit: i.product.category === "Café" ? "kg" : "u.",
+          unitPrice: p,
+        };
+      }),
+      total,
+      kgCafe,
+      status: "pendiente",
+      notes: (phone ? `Tel: ${phone}. ` : "") + notes,
+    };
+
+    try {
+      const existing = localStorage.getItem(ORDERS_KEY);
+      const list: SavedOrder[] = existing ? JSON.parse(existing) : [];
+      list.push(order);
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(list));
+    } catch { /* empty */ }
+
+    setSubmitting(false);
+    setStep("done");
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", border: "1.5px solid var(--border)", borderRadius: 2,
+    padding: "9px 12px", fontSize: 14, outline: "none",
+    background: "#fff", color: "var(--text)", fontFamily: "inherit",
+    boxSizing: "border-box",
   };
 
   return (
     <div
       className="cart-panel"
-      style={{ width: 380, background: "#fff", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
+      style={{ width: 400, background: "#fff", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
     >
+      {/* Header */}
       <div style={{
-        padding: "20px 24px", borderBottom: "1px solid var(--border)",
+        padding: "18px 24px", borderBottom: "1px solid var(--border)",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 600 }}>Tu pedido</h3>
-          <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
-            {items.length === 0 ? "Sin productos" : `${items.length} producto${items.length !== 1 ? "s" : ""}`}
-          </p>
+          <h3 style={{ fontSize: 16, fontWeight: 600 }}>
+            {step === "cart" ? "Tu pedido" : step === "checkout" ? "Confirmar pedido" : "¡Pedido enviado!"}
+          </h3>
+          {step === "cart" && (
+            <p style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>
+              {items.length === 0 ? "Sin productos" : `${items.length} producto${items.length !== 1 ? "s" : ""}`}
+            </p>
+          )}
         </div>
-        <button onClick={onClose} style={{ color: "var(--text3)" }}><IcoX /></button>
+        <button onClick={onClose} style={{ color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}><IcoX /></button>
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
-        {items.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text3)" }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>☕</div>
-            <p style={{ fontSize: 14 }}>Tu pedido está vacío</p>
-          </div>
-        ) : (
-          items.map(item => {
-            const p = item.variant?.price ?? item.product.salePrice ?? item.product.price;
-            return (
-              <div key={item.product.id + (item.variant?.sku ?? "")} style={{
-                display: "flex", gap: 12,
-                paddingBottom: 16, marginBottom: 16,
-                borderBottom: "1px solid var(--border)",
-              }}>
-                <div style={{
-                  width: 56, height: 56, flexShrink: 0,
-                  background: "#ECEAE5", borderRadius: 2, overflow: "hidden",
-                }}>
-                  <img src={item.product.image} alt={item.product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 2, color: "var(--text)" }}>
-                    {item.product.name}
-                    {item.variant && <span style={{ color: "var(--text3)" }}> · {item.variant.label}</span>}
-                  </p>
-                  <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 8 }}>{FMT_ARS(p)} / u.</p>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border)", borderRadius: 2 }}>
-                      <button onClick={() => item.qty <= item.product.minQty ? onRemove(item.product.id) : onUpdate(item.product.id, item.qty - 1)} style={{ padding: "4px 9px", color: "var(--text3)" }}><IcoMinus /></button>
-                      <span style={{ minWidth: 28, textAlign: "center", fontSize: 13, fontWeight: 600 }}>{item.qty}</span>
-                      <button onClick={() => onUpdate(item.product.id, item.qty + 1)} style={{ padding: "4px 9px", color: "var(--text3)" }}><IcoPlus /></button>
-                    </div>
-                    <span style={{ fontSize: 14, fontWeight: 600 }}>{FMT_ARS(p * item.qty)}</span>
-                    <button onClick={() => onRemove(item.product.id)} style={{ color: "var(--text3)", fontSize: 18, lineHeight: 1 }}>×</button>
-                  </div>
-                </div>
+      {/* ── Step: cart ── */}
+      {step === "cart" && (
+        <>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+            {items.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text3)" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>☕</div>
+                <p style={{ fontSize: 14 }}>Tu pedido está vacío</p>
               </div>
-            );
-          })
-        )}
-      </div>
-
-      {items.length > 0 && (
-        <div style={{ padding: "16px 24px 28px", borderTop: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-            <span style={{ fontSize: 14, color: "var(--text2)" }}>Total estimado</span>
-            <span style={{ fontSize: 18, fontWeight: 700 }}>{FMT_ARS(total)}</span>
+            ) : (
+              items.map(item => {
+                const p = item.variant?.price ?? item.product.salePrice ?? item.product.price;
+                return (
+                  <div key={item.product.id + (item.variant?.sku ?? "")} style={{
+                    display: "flex", gap: 12,
+                    paddingBottom: 16, marginBottom: 16,
+                    borderBottom: "1px solid var(--border)",
+                  }}>
+                    <div style={{ width: 56, height: 56, flexShrink: 0, background: "#ECEAE5", borderRadius: 2, overflow: "hidden" }}>
+                      <img src={item.product.image} alt={item.product.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 2, color: "var(--text)" }}>
+                        {item.product.name}
+                        {item.variant && <span style={{ color: "var(--text3)" }}> · {item.variant.label}</span>}
+                      </p>
+                      <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 8 }}>{FMT_ARS(p)} / u.</p>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border)", borderRadius: 2 }}>
+                          <button onClick={() => item.qty <= item.product.minQty ? onRemove(item.product.id) : onUpdate(item.product.id, item.qty - 1)} style={{ padding: "4px 9px", color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}><IcoMinus /></button>
+                          <span style={{ minWidth: 28, textAlign: "center", fontSize: 13, fontWeight: 600 }}>{item.qty}</span>
+                          <button onClick={() => onUpdate(item.product.id, item.qty + 1)} style={{ padding: "4px 9px", color: "var(--text3)", background: "none", border: "none", cursor: "pointer" }}><IcoPlus /></button>
+                        </div>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{FMT_ARS(p * item.qty)}</span>
+                        <button onClick={() => onRemove(item.product.id)} style={{ color: "var(--text3)", fontSize: 18, lineHeight: 1, background: "none", border: "none", cursor: "pointer" }}>×</button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
-          <a
-            href={`https://wa.me/${settings.whatsappNumber}?text=${buildMsg()}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          {items.length > 0 && (
+            <div style={{ padding: "16px 24px 28px", borderTop: "1px solid var(--border)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                <span style={{ fontSize: 14, color: "var(--text2)" }}>Total estimado</span>
+                <span style={{ fontSize: 18, fontWeight: 700 }}>{FMT_ARS(total)}</span>
+              </div>
+              <button
+                onClick={() => setStep("checkout")}
+                style={{
+                  width: "100%", background: "var(--text)", color: "#fff",
+                  border: "none", borderRadius: 2, padding: "13px 20px",
+                  fontSize: 14, fontWeight: 600, letterSpacing: ".04em", cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                Continuar con el pedido →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Step: checkout ── */}
+      {step === "checkout" && (
+        <>
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+            {/* Order summary */}
+            <div style={{ background: "var(--cream2)", borderRadius: 3, padding: "12px 14px", marginBottom: 20 }}>
+              {items.map(i => {
+                const p = i.variant?.price ?? i.product.salePrice ?? i.product.price;
+                return (
+                  <div key={i.product.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 4 }}>
+                    <span style={{ color: "var(--text2)" }}>{i.product.name} × {i.qty}</span>
+                    <span style={{ fontWeight: 600 }}>{FMT_ARS(p * i.qty)}</span>
+                  </div>
+                );
+              })}
+              <div style={{ borderTop: "1px solid var(--border)", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between", fontWeight: 700, fontSize: 14 }}>
+                <span>Total</span>
+                <span>{FMT_ARS(total)}</span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 5 }}>
+                Nombre o cafetería *
+              </label>
+              <input
+                style={inputStyle}
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="ej. Café Amaranto"
+                autoFocus
+              />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 5 }}>
+                Teléfono de contacto
+              </label>
+              <input
+                style={inputStyle}
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="+54 9 11 ..."
+                type="tel"
+              />
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--text2)", marginBottom: 5 }}>
+                Notas del pedido
+              </label>
+              <textarea
+                style={{ ...inputStyle, height: 72, resize: "vertical" }}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Indicaciones especiales, horario de entrega, etc."
+              />
+            </div>
+          </div>
+
+          <div style={{ padding: "16px 24px 28px", borderTop: "1px solid var(--border)" }}>
+            <button
+              onClick={saveOrder}
+              disabled={!name.trim() || submitting}
+              style={{
+                width: "100%", background: !name.trim() ? "var(--border)" : "var(--text)",
+                color: "#fff", border: "none", borderRadius: 2,
+                padding: "13px 20px", fontSize: 14, fontWeight: 600,
+                cursor: name.trim() ? "pointer" : "not-allowed",
+                fontFamily: "inherit", letterSpacing: ".04em",
+              }}
+            >
+              {submitting ? "Enviando…" : "Confirmar pedido"}
+            </button>
+            <button
+              onClick={() => setStep("cart")}
+              style={{ width: "100%", marginTop: 10, background: "none", border: "none", color: "var(--text3)", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}
+            >
+              ← Volver al pedido
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── Step: done ── */}
+      {step === "done" && (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center" }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>¡Pedido recibido!</h3>
+          <p style={{ fontSize: 14, color: "var(--text2)", lineHeight: 1.6, marginBottom: 24 }}>
+            Tu pedido fue enviado y está siendo procesado. Te contactaremos pronto para coordinar la entrega.
+          </p>
+          <button
+            onClick={() => { onOrderPlaced(); onClose(); }}
             style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-              background: "#25D366", color: "#fff", textDecoration: "none",
-              borderRadius: 2, padding: "13px 20px",
-              fontSize: 14, fontWeight: 600, letterSpacing: ".04em",
+              background: "var(--text)", color: "#fff", border: "none",
+              borderRadius: 2, padding: "12px 28px",
+              fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
             }}
           >
-            <IcoWA /> Enviar por WhatsApp
-          </a>
-          <p style={{ fontSize: 11, color: "var(--text3)", textAlign: "center", marginTop: 10 }}>
-            Se abrirá WhatsApp para confirmar el pedido
-          </p>
+            Cerrar
+          </button>
         </div>
       )}
     </div>
@@ -595,10 +762,10 @@ export default function CatalogPage() {
           />
           <CartDrawer
             items={cart}
-            settings={settings}
             onClose={() => setCartOpen(false)}
             onUpdate={updateCart}
             onRemove={removeFromCart}
+            onOrderPlaced={() => setCart([])}
           />
         </>
       )}
