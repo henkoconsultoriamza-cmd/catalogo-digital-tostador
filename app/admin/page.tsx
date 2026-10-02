@@ -61,33 +61,58 @@ const calcKg    = (lines: OrderLine[]) => lines.filter(l => l.category === "Caf�
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg: "#F2EDE6", white: "#FFFFFF", text: "#1A0E05", text2: "#5A3E28", muted: "#A08060",
-  border: "#DDD5C8", accent: "#C4843A", green: "#1A7A3A", red: "#CC3300", orange: "#CC5500",
-  sidebar: "#18120C",
+  bg:      "#F1F5F9",   // slate-100
+  white:   "#FFFFFF",
+  text:    "#0F172A",   // slate-900
+  text2:   "#475569",   // slate-600
+  muted:   "#94A3B8",   // slate-400
+  border:  "#E2E8F0",   // slate-200
+  border2: "#CBD5E1",
+  accent:  "#C4843A",
+  accentL: "#FDF3E7",
+  green:   "#059669",
+  greenL:  "#ECFDF5",
+  red:     "#DC2626",
+  redL:    "#FEF2F2",
+  orange:  "#D97706",
+  orangeL: "#FFFBEB",
+  sidebar: "#0F172A",
+  sidebarH:"rgba(255,255,255,.06)",
+  sidebarA:"rgba(196,132,58,.15)",
 };
 
+const inputBase: React.CSSProperties = {
+  width: "100%", border: `1px solid ${C.border}`, borderRadius: 6,
+  padding: "9px 12px", fontSize: 13.5, outline: "none",
+  background: C.white, color: C.text, fontFamily: "inherit",
+  transition: "border-color .15s, box-shadow .15s",
+};
 const S = {
-  input:  { width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 4, padding: "8px 12px", fontSize: 14, outline: "none", background: C.white, color: C.text, fontFamily: "inherit" } as React.CSSProperties,
-  select: { width: "100%", border: `1.5px solid ${C.border}`, borderRadius: 4, padding: "8px 12px", fontSize: 14, outline: "none", background: C.white, color: C.text, fontFamily: "inherit" } as React.CSSProperties,
-  btn:     { border: "none", borderRadius: 4, padding: "9px 18px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" } as React.CSSProperties,
-  primary: { background: C.text, color: C.white } as React.CSSProperties,
-  accent:  { background: C.accent, color: C.white } as React.CSSProperties,
-  ghost:   { background: "none", border: `1.5px solid ${C.border}`, color: C.text2 } as React.CSSProperties,
-  danger:  { background: "none", border: `1.5px solid ${C.border}`, color: C.red } as React.CSSProperties,
-  card: { background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "18px 20px", marginBottom: 10 } as React.CSSProperties,
-  form: { background: "#FBF8F4", border: `1.5px solid ${C.accent}40`, borderRadius: 8, padding: 24, marginBottom: 20 } as React.CSSProperties,
-  divider: { height: 1, background: C.border, margin: "18px 0" } as React.CSSProperties,
-  sectionLabel: { fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: ".08em", textTransform: "uppercase" as const, marginBottom: 12 },
+  input:  inputBase,
+  select: inputBase,
+  btn:    { border: "none", borderRadius: 6, padding: "9px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", letterSpacing: "-.01em" } as React.CSSProperties,
+  primary:{ background: C.text, color: C.white } as React.CSSProperties,
+  accent: { background: C.accent, color: C.white } as React.CSSProperties,
+  ghost:  { background: C.white, border: `1px solid ${C.border2}`, color: C.text2 } as React.CSSProperties,
+  danger: { background: C.white, border: `1px solid ${C.border2}`, color: C.red } as React.CSSProperties,
+  card:   { background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "18px 22px", marginBottom: 8, boxShadow: "0 1px 3px rgba(15,23,42,.04)" } as React.CSSProperties,
+  form:   { background: "#F8FAFC", border: `1px solid ${C.border}`, borderRadius: 10, padding: 24, marginBottom: 20, boxShadow: "inset 0 1px 2px rgba(0,0,0,.02)" } as React.CSSProperties,
+  divider:{ height: 1, background: C.border, margin: "20px 0" } as React.CSSProperties,
+  sectionLabel: { fontSize: 10.5, fontWeight: 600, color: C.muted, letterSpacing: ".08em", textTransform: "uppercase" as const, marginBottom: 12 },
 };
 
 // ── Micro components ──────────────────────────────────────────────────────────
-const Badge = ({ color, text }: { color: string; text: string }) => (
-  <span style={{ display: "inline-block", background: color + "1A", color, border: `1px solid ${color}40`, borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 600, letterSpacing: ".04em" }}>{text}</span>
+const Badge = ({ color, bg, text }: { color: string; bg?: string; text: string }) => (
+  <span style={{
+    display: "inline-flex", alignItems: "center",
+    background: bg ?? color + "18", color,
+    borderRadius: 9999, padding: "2px 9px", fontSize: 11, fontWeight: 600, letterSpacing: ".02em",
+  }}>{text}</span>
 );
 
 const Field = ({ label, children, span2 }: { label: string; children: React.ReactNode; span2?: boolean }) => (
   <div style={{ marginBottom: 14, ...(span2 ? { gridColumn: "span 2" } : {}) }}>
-    <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: C.text2, marginBottom: 5 }}>{label}</label>
+    <label style={{ display: "block", fontSize: 11.5, fontWeight: 500, color: C.text2, marginBottom: 5, letterSpacing: "-.01em" }}>{label}</label>
     {children}
   </div>
 );
@@ -97,18 +122,63 @@ const Grid = ({ cols = 2, children }: { cols?: number; children: React.ReactNode
 );
 
 const InfoChip = ({ label, value, accent, alert }: { label: string; value: string; accent?: boolean; alert?: boolean }) => (
-  <div style={{ background: alert ? "#FFF0EE" : accent ? "#FBF4EC" : "#F5F0E8", borderRadius: 4, padding: "8px 12px", fontSize: 12, border: alert ? `1px solid ${C.red}30` : "none" }}>
-    <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 3 }}>{label}</div>
-    <div style={{ color: alert ? C.red : accent ? C.accent : C.text, fontWeight: 600 }}>{value}</div>
+  <div style={{
+    background: alert ? C.redL : accent ? C.accentL : "#F8FAFC",
+    borderRadius: 6, padding: "7px 11px", fontSize: 12,
+    border: `1px solid ${alert ? C.red + "30" : C.border}`,
+  }}>
+    <div style={{ fontSize: 10, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 2 }}>{label}</div>
+    <div style={{ color: alert ? C.red : accent ? C.accent : C.text, fontWeight: 600, fontSize: 12.5 }}>{value}</div>
+  </div>
+);
+
+// ── Panel card ────────────────────────────────────────────────────────────────
+const Panel = ({ title, sub, children, mb }: { title: string; sub?: React.ReactNode; children: React.ReactNode; mb?: boolean }) => (
+  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px 22px", boxShadow: "0 1px 3px rgba(15,23,42,.04)", ...(mb ? { marginBottom: 16 } : {}) }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+      <h2 style={{ fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: "-.01em" }}>{title}</h2>
+      {sub && <span style={{ fontSize: 12, color: C.muted }}>{sub}</span>}
+    </div>
+    {children}
+  </div>
+);
+
+const Empty = ({ text }: { text: string }) => (
+  <p style={{ fontSize: 13, color: C.muted, padding: "16px 0" }}>{text}</p>
+);
+
+// ── Page section header ────────────────────────────────────────────────────────
+const PageHeader = ({ title, sub, action }: { title: string; sub?: string; action?: React.ReactNode }) => (
+  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+    <div>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: "-.02em" }}>{title}</h1>
+      {sub && <p style={{ fontSize: 13, color: C.muted, marginTop: 3 }}>{sub}</p>}
+    </div>
+    {action}
+  </div>
+);
+
+// ── Pill tabs ──────────────────────────────────────────────────────────────────
+const PillTabs = <T extends string>({ options, value, onChange, labels }: { options: readonly T[]; value: T; onChange: (v: T) => void; labels?: Partial<Record<T, string>> }) => (
+  <div style={{ display: "flex", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 3, width: "fit-content" }}>
+    {options.map(o => (
+      <button key={o} onClick={() => onChange(o)} style={{
+        padding: "6px 14px", fontSize: 12.5, fontFamily: "inherit", cursor: "pointer", borderRadius: 6,
+        background: value === o ? C.white : "none",
+        color: value === o ? C.text : C.muted,
+        border: "none", fontWeight: value === o ? 500 : 400,
+        boxShadow: value === o ? "0 1px 2px rgba(15,23,42,.06)" : "none",
+        transition: "all .15s",
+      }}>{labels?.[o] ?? o}</button>
+    ))}
   </div>
 );
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
-const Stat = ({ icon, label, value, sub, color = C.text }: { icon: string; label: string; value: string | number; sub?: string; color?: string }) => (
-  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "18px 20px" }}>
-    <div style={{ fontSize: 22, marginBottom: 8 }}>{icon}</div>
-    <div style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-    <div style={{ fontSize: 13, color: C.text2, marginTop: 5, fontWeight: 500 }}>{label}</div>
+const Stat = ({ label, value, sub, color = C.accent, stripe }: { label: string; value: string | number; sub?: string; color?: string; stripe?: boolean }) => (
+  <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "20px 22px", boxShadow: "0 1px 3px rgba(15,23,42,.04)", ...(stripe ? { borderTop: `3px solid ${color}` } : {}) }}>
+    <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1, letterSpacing: "-.02em" }}>{value}</div>
+    <div style={{ fontSize: 13, color: C.text2, marginTop: 6, fontWeight: 400 }}>{label}</div>
     {sub && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{sub}</div>}
   </div>
 );
@@ -117,24 +187,23 @@ const Stat = ({ icon, label, value, sub, color = C.text }: { icon: string; label
 const ProgressBar = ({ name, phone, actual, target }: { name: string; phone?: string; actual: number; target: number }) => {
   const pct   = target > 0 ? Math.min((actual / target) * 100, 100) : 0;
   const over  = actual > target && target > 0;
-  const color = pct < 60 ? C.red : pct < 90 ? C.accent : C.green;
+  const color = pct < 60 ? C.red : pct < 90 ? C.orange : C.green;
   return (
-    <div style={{ marginBottom: 18 }}>
+    <div style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
         <div>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>{name}</span>
+          <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{name}</span>
           {phone && <span style={{ fontSize: 11, color: C.muted, marginLeft: 8 }}>{phone}</span>}
         </div>
         <div style={{ textAlign: "right", fontSize: 13 }}>
-          <span style={{ fontWeight: 700, color }}>{actual.toFixed(1)} kg</span>
+          <span style={{ fontWeight: 600, color }}>{actual.toFixed(1)} kg</span>
           <span style={{ color: C.muted }}> / {target} kg</span>
-          {over && <span style={{ color: C.green, marginLeft: 6, fontSize: 11 }}>✓ +{(actual - target).toFixed(1)}</span>}
+          {over && <span style={{ color: C.green, marginLeft: 6, fontSize: 11, fontWeight: 600 }}>+{(actual - target).toFixed(1)}</span>}
         </div>
       </div>
-      <div style={{ background: "#EAE4DC", borderRadius: 4, height: 7, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 4, transition: "width .4s" }} />
+      <div style={{ background: C.border, borderRadius: 99, height: 5, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 99, transition: "width .5s ease" }} />
       </div>
-      <div style={{ fontSize: 11, color, marginTop: 3 }}>{target === 0 ? "Sin compromiso" : `${pct.toFixed(0)}% del compromiso mensual`}</div>
     </div>
   );
 };
@@ -185,115 +254,100 @@ function Dashboard({ orders, comodatos, clientes }: { orders: Order[]; comodatos
 
   return (
     <div>
-      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>Dashboard</h1>
-      <p style={{ fontSize: 13, color: C.muted, marginBottom: 28 }}>{monthLabel} · resumen general del negocio</p>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: "-.02em" }}>Dashboard</h1>
+        <p style={{ fontSize: 13, color: C.muted, marginTop: 3 }}>{monthLabel}</p>
+      </div>
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 28 }}>
-        <Stat icon="📦" label="Pedidos este mes" value={kpiPedidos} />
-        <Stat icon="☕" label="Kg café este mes" value={`${kpiKg.toFixed(1)} kg`} color={C.accent} />
-        <Stat icon="💰" label="Facturación" value={FMT(kpiVentas)} color={C.green} sub={monthLabel} />
-        <Stat icon="⏳" label="Pedidos pendientes" value={kpiPendiente} color={kpiPendiente > 0 ? C.orange : C.text} />
-        <Stat icon="👥" label="Clientes activos" value={kpiClientes} />
+        <Stat stripe label="Pedidos este mes" value={kpiPedidos} color={C.text} />
+        <Stat stripe label="Kg café vendidos" value={`${kpiKg.toFixed(1)} kg`} color={C.accent} />
+        <Stat stripe label="Facturación" value={FMT(kpiVentas)} color={C.green} sub={monthLabel} />
+        <Stat stripe label="Pendientes" value={kpiPendiente} color={kpiPendiente > 0 ? C.orange : C.muted} />
+        <Stat stripe label="Clientes activos" value={kpiClientes} color={C.text} />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
         {/* Consumption vs commitment */}
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Consumo vs. compromiso</h2>
-            <span style={{ fontSize: 12, color: C.muted }}>comodatos activos</span>
-          </div>
+        <Panel title="Consumo vs. compromiso" sub="comodatos activos">
           {active.filter(c => c.minKgMonth > 0).length === 0
-            ? <p style={{ fontSize: 13, color: C.muted, padding: "20px 0" }}>Sin comodatos con compromiso definido</p>
+            ? <Empty text="Sin comodatos con compromiso definido" />
             : active.filter(c => c.minKgMonth > 0).map(c => (
                 <ProgressBar key={c.id} name={c.cafeteria} phone={c.phone}
                   actual={consumoById[c.id] ?? 0} target={c.minKgMonth} />
               ))
           }
-        </div>
+        </Panel>
 
         {/* Ranking */}
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Ranking de clientes</h2>
-            <span style={{ fontSize: 12, color: C.muted }}>kg café este mes</span>
-          </div>
+        <Panel title="Ranking de clientes" sub="kg café este mes">
           {ranking.length === 0
-            ? <p style={{ fontSize: 13, color: C.muted, padding: "20px 0" }}>Sin pedidos este mes</p>
+            ? <Empty text="Sin pedidos este mes" />
             : ranking.map((c, i) => (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < ranking.length - 1 ? `1px solid ${C.border}` : "none" }}>
                   <div style={{
-                    width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
-                    background: i === 0 ? C.accent : i === 1 ? "#8B6030" : i === 2 ? C.muted : "#EAE4DC",
+                    width: 24, height: 24, borderRadius: "50%", flexShrink: 0, fontSize: 11, fontWeight: 700,
+                    background: i === 0 ? C.accent : i < 3 ? C.text2 : C.border,
                     color: i < 3 ? C.white : C.text2,
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 700,
                   }}>{i + 1}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{c.name}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{c.name}</div>
                     {c.phone && <div style={{ fontSize: 11, color: C.muted }}>{c.phone}</div>}
                   </div>
-                  <div style={{ fontWeight: 700, color: C.accent }}>{c.kg.toFixed(1)} kg</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: C.accent }}>{c.kg.toFixed(1)} kg</div>
                 </div>
               ))
           }
-        </div>
+        </Panel>
       </div>
 
       {/* Kg por tipo de café */}
-      <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: 22, marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Kg por tipo de café</h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <span style={{ fontSize: 12, color: C.muted }}>este mes</span>
-            <span style={{ fontSize: 18, fontWeight: 700, color: C.accent }}>{totalKgCoffee.toFixed(1)} kg total</span>
-          </div>
-        </div>
+      <Panel title="Kg por tipo de café" sub={<span style={{ fontSize: 16, fontWeight: 700, color: C.accent }}>{totalKgCoffee.toFixed(1)} kg total</span>} mb>
         {coffeeRanking.length === 0
-          ? <p style={{ fontSize: 13, color: C.muted }}>Sin pedidos de café este mes</p>
+          ? <Empty text="Sin pedidos de café este mes" />
           : coffeeRanking.map(([name, kg], i) => {
               const pct = totalKgCoffee > 0 ? (kg / totalKgCoffee) * 100 : 0;
-              const colors = [C.accent, "#8B6030", C.text2, C.muted, "#A08060"];
-              const col = colors[Math.min(i, colors.length - 1)];
+              const cols = [C.accent, "#7C5C3A", "#94A3B8", "#CBD5E1", "#E2E8F0"];
+              const col  = cols[Math.min(i, cols.length - 1)];
               return (
-                <div key={name} style={{ marginBottom: 16 }}>
+                <div key={name} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: col, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                      <span style={{ fontSize: 14, fontWeight: 600 }}>{name}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: col, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, fontWeight: 500 }}>{name}</span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                    <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
                       <span style={{ fontSize: 11, color: C.muted }}>{pct.toFixed(1)}%</span>
-                      <span style={{ fontSize: 15, fontWeight: 700, color: col, minWidth: 60, textAlign: "right" }}>{kg.toFixed(1)} kg</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: C.text, minWidth: 55, textAlign: "right" }}>{kg.toFixed(1)} kg</span>
                     </div>
                   </div>
-                  <div style={{ background: "#EAE4DC", borderRadius: 4, height: 6 }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: col, borderRadius: 4, transition: "width .4s" }} />
+                  <div style={{ background: C.border, borderRadius: 99, height: 4 }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: col, borderRadius: 99, transition: "width .5s ease" }} />
                   </div>
                 </div>
               );
             })
         }
-      </div>
+      </Panel>
 
       {/* Revenue by category */}
       {Object.keys(catRevenue).length > 0 && (
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: 22, marginBottom: 20 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16 }}>Facturación por categoría</h2>
-          <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+        <Panel title="Facturación por categoría" mb>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {Object.entries(catRevenue).sort((a, b) => b[1] - a[1]).map(([cat, rev]) => {
               const pct = kpiVentas > 0 ? (rev / kpiVentas) * 100 : 0;
               return (
-                <div key={cat} style={{ flex: "1 1 130px", background: "#F5F0E8", borderRadius: 6, padding: "14px 16px" }}>
-                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{cat}</div>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>{FMT(rev)}</div>
-                  <div style={{ fontSize: 11, color: C.accent, marginTop: 2 }}>{pct.toFixed(0)}% del total</div>
+                <div key={cat} style={{ flex: "1 1 120px", background: C.bg, borderRadius: 8, padding: "14px 16px", border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: C.muted, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{cat}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.02em" }}>{FMT(rev)}</div>
+                  <div style={{ fontSize: 11, color: C.accent, marginTop: 3, fontWeight: 500 }}>{pct.toFixed(0)}% del total</div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </Panel>
       )}
 
       {/* Recent orders */}
@@ -391,59 +445,32 @@ function ClientesSection({ comodatos, clientes, orders, machines, molinos, onGoT
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Clientes</h1>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Vista unificada de todos tus clientes activos</p>
-        </div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={onGoToComodatos}>+ Nuevo comodato</button>
-      </div>
+      <PageHeader title="Clientes" sub="Vista unificada de todos tus clientes"
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={onGoToComodatos}>+ Nuevo comodato</button>} />
 
       {/* KPI strip */}
-      <div style={{ display: "flex", gap: 12, margin: "20px 0" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {[
-          { label: "Total clientes", val: totals.total, color: C.text },
+          { label: "Total", val: totals.total, color: C.text },
           { label: "Activos", val: totals.activos, color: C.green },
           { label: "Comodatos", val: totals.comodatos, color: C.accent },
-          { label: "Máquina propia", val: totals.propios, color: C.text2 },
+          { label: "Máq. propia", val: totals.propios, color: C.text2 },
         ].map(k => (
-          <div key={k.label} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 110 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.color }}>{k.val}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{k.label}</div>
+          <div key={k.label} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: k.color, letterSpacing: "-.02em" }}>{k.val}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          style={{ ...S.input, maxWidth: 240 }}
-          placeholder="Buscar por nombre o teléfono…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-        <div style={{ display: "flex", background: C.white, border: `1px solid ${C.border}`, borderRadius: 4 }}>
-          {(["all", "comodato", "propio"] as const).map(f => (
-            <button key={f} onClick={() => setTypeFilter(f)} style={{
-              padding: "7px 14px", fontSize: 12, fontFamily: "inherit", cursor: "pointer",
-              background: typeFilter === f ? C.text : "none",
-              color: typeFilter === f ? C.white : C.text2, border: "none", borderRadius: 3,
-            }}>
-              {f === "all" ? "Todos" : f === "comodato" ? "Comodatos" : "Máquina propia"}
-            </button>
-          ))}
-        </div>
-        <div style={{ display: "flex", background: C.white, border: `1px solid ${C.border}`, borderRadius: 4 }}>
-          {(["all", "activo", "inactivo"] as const).map(f => (
-            <button key={f} onClick={() => setStatusFilter(f)} style={{
-              padding: "7px 14px", fontSize: 12, fontFamily: "inherit", cursor: "pointer",
-              background: statusFilter === f ? C.text : "none",
-              color: statusFilter === f ? C.white : C.text2, border: "none", borderRadius: 3,
-            }}>
-              {f === "all" ? "Todos" : f === "activo" ? "Activos" : "Inactivos"}
-            </button>
-          ))}
-        </div>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+        <input style={{ ...S.input, maxWidth: 240 }} placeholder="Buscar por nombre o teléfono…"
+          value={search} onChange={e => setSearch(e.target.value)} />
+        <PillTabs options={["all", "comodato", "propio"] as const} value={typeFilter} onChange={setTypeFilter}
+          labels={{ all: "Todos", comodato: "Comodatos", propio: "Máq. propia" }} />
+        <PillTabs options={["all", "activo", "inactivo"] as const} value={statusFilter} onChange={setStatusFilter}
+          labels={{ all: "Todos", activo: "Activos", inactivo: "Inactivos" }} />
         <span style={{ fontSize: 12, color: C.muted }}>{visible.length} resultado{visible.length !== 1 ? "s" : ""}</span>
       </div>
 
@@ -540,35 +567,25 @@ function PedidosSection({ orders, setOrders, comodatos, clientes }: {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Pedidos</h1>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Pedidos recibidos desde el catálogo</p>
-        </div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo manual</button>
-      </div>
+      <PageHeader title="Pedidos" sub="Pedidos del catálogo y manuales"
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo manual</button>} />
 
       {/* Stats */}
-      <div style={{ display: "flex", gap: 12, margin: "20px 0", flexWrap: "wrap" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {(["pendiente", "confirmado", "entregado", "cancelado"] as const).map(s => (
-          <div key={s} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 110, cursor: "pointer" }} onClick={() => setStatusF(statusF === s ? "all" : s)}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: SC[s] }}>{orders.filter(o => o.status === s).length}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</div>
+          <div key={s} onClick={() => setStatusF(statusF === s ? "all" : s)}
+            style={{ background: C.white, border: `1px solid ${statusF === s ? C.accent : C.border}`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", boxShadow: "0 1px 3px rgba(15,23,42,.04)", transition: "border-color .15s" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: SC[s], letterSpacing: "-.02em" }}>{orders.filter(o => o.status === s).length}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{s.charAt(0).toUpperCase() + s.slice(1)}</div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
         <input style={{ ...S.input, maxWidth: 220 }} placeholder="Buscar cliente…" value={search} onChange={e => setSearch(e.target.value)} />
-        <div style={{ display: "flex", background: C.white, border: `1px solid ${C.border}`, borderRadius: 4 }}>
-          {(["all", "pendiente", "confirmado", "entregado", "cancelado"] as const).map(f => (
-            <button key={f} onClick={() => setStatusF(f)} style={{
-              padding: "7px 13px", fontSize: 12, fontFamily: "inherit", cursor: "pointer",
-              background: statusF === f ? C.text : "none", color: statusF === f ? C.white : C.text2, border: "none", borderRadius: 3,
-            }}>{f === "all" ? "Todos" : f.charAt(0).toUpperCase() + f.slice(1)}</button>
-          ))}
-        </div>
+        <PillTabs options={["all", "pendiente", "confirmado", "entregado", "cancelado"] as const} value={statusF} onChange={setStatusF}
+          labels={{ all: "Todos", pendiente: "Pendiente", confirmado: "Confirmado", entregado: "Entregado", cancelado: "Cancelado" }} />
       </div>
 
       {adding && <OrderForm comodatos={comodatos} clientes={clientes} onSave={onSave} onCancel={() => setAdding(false)} />}
@@ -737,27 +754,19 @@ function ComodatosSection({ records, setRecords, machines, molinos }: {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Comodatos</h1>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Máquinas entregadas en comodato a cafeterías</p>
-        </div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo comodato</button>
-      </div>
-      <div style={{ display: "flex", gap: 12, margin: "20px 0" }}>
+      <PageHeader title="Comodatos" sub="Máquinas entregadas en comodato a cafeterías"
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo comodato</button>} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
         {(["activo", "suspendido", "finalizado"] as const).map(k => (
-          <div key={k} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 110 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: CC[k] }}>{records.filter(r => r.status === k).length}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{k.charAt(0).toUpperCase() + k.slice(1)}{k !== "finalizado" ? "s" : "s"}</div>
+          <div key={k} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: CC[k], letterSpacing: "-.02em" }}>{records.filter(r => r.status === k).length}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{k.charAt(0).toUpperCase() + k.slice(1)}s</div>
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", gap: 0, marginBottom: 20, background: C.white, border: `1px solid ${C.border}`, borderRadius: 4, width: "fit-content" }}>
-        {(["all", "activo", "suspendido", "finalizado"] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: "7px 16px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", background: filter === f ? C.text : "none", color: filter === f ? C.white : C.text2, border: "none", borderRadius: 3 }}>
-            {f === "all" ? "Todos" : f.charAt(0).toUpperCase() + f.slice(1) + "s"}
-          </button>
-        ))}
+      <div style={{ marginBottom: 20 }}>
+        <PillTabs options={["all", "activo", "suspendido", "finalizado"] as const} value={filter} onChange={setFilter}
+          labels={{ all: "Todos", activo: "Activos", suspendido: "Suspendidos", finalizado: "Finalizados" }} />
       </div>
       {adding && <ComodatoForm machines={machines} molinos={molinos} onSave={onSave} onCancel={() => setAdding(false)} />}
       {visible.length === 0 && !adding && <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}><div style={{ fontSize: 40, marginBottom: 10 }}>☕</div><p>Sin comodatos</p></div>}
@@ -884,16 +893,17 @@ function SoloConsumoSection({ clientes, setClientes }: { clientes: ClientePropio
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Solo consumo</h1>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Clientes con máquina propia que compran café y productos</p>
+      <PageHeader title="Solo consumo" sub="Clientes con máquina propia"
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo cliente</button>} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24, maxWidth: 300 }}>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+          <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: "-.02em" }}>{clientes.length}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Total</div>
         </div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Nuevo cliente</button>
-      </div>
-      <div style={{ display: "flex", gap: 12, margin: "20px 0" }}>
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center" }}><div style={{ fontSize: 22, fontWeight: 700 }}>{clientes.length}</div><div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total</div></div>
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center" }}><div style={{ fontSize: 22, fontWeight: 700, color: C.green }}>{clientes.filter(c => c.status === "activo").length}</div><div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Activos</div></div>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+          <div style={{ fontSize: 26, fontWeight: 700, color: C.green, letterSpacing: "-.02em" }}>{clientes.filter(c => c.status === "activo").length}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Activos</div>
+        </div>
       </div>
       {adding && <SoloConsumoForm onSave={onSave} onCancel={() => setAdding(false)} />}
       {clientes.length === 0 && !adding && <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}><div style={{ fontSize: 40, marginBottom: 10 }}>🏪</div><p>Sin clientes registrados</p></div>}
@@ -1048,15 +1058,13 @@ function EquipSection<T extends Machine | Molino>({ items, setItems, storageKey,
   const updM    = (id: string, list: Maintenance[]) => persist(items.map(i => i.id === id ? { ...i, maintenances: list } : i));
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div><h1 style={{ fontSize: 20, fontWeight: 700 }}>{title}</h1><p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>{description}</p></div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Agregar {noun}</button>
-      </div>
-      <div style={{ display: "flex", gap: 12, margin: "20px 0" }}>
+      <PageHeader title={title} sub={description}
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Agregar {noun}</button>} />
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {(Object.keys(EL) as EquipStatus[]).map(k => (
-          <div key={k} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 110 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: EC[k] }}>{items.filter(i => i.status === k).length}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{EL[k]}</div>
+          <div key={k} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "16px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: EC[k], letterSpacing: "-.02em" }}>{items.filter(i => i.status === k).length}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{EL[k]}</div>
           </div>
         ))}
       </div>
@@ -1131,43 +1139,30 @@ function ProductosSection({ products, setProducts }: { products: AdminProduct[];
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Productos</h1>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Catálogo visible en la tienda — los cambios se reflejan en tiempo real</p>
-        </div>
-        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Agregar producto</button>
-      </div>
+      <PageHeader title="Productos" sub="Catálogo visible en la tienda — los cambios se reflejan en tiempo real"
+        action={<button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Agregar producto</button>} />
 
-      {/* Category KPIs */}
-      <div style={{ display: "flex", gap: 12, margin: "20px 0", flexWrap: "wrap" }}>
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>{products.length}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total</div>
-        </div>
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
-          <div style={{ fontSize: 22, fontWeight: 700, color: C.green }}>{products.filter(p => p.active).length}</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Activos</div>
-        </div>
-        {PRODUCT_CATEGORIES.filter(c => c !== "Otro").map(c => byCat[c] ? (
-          <div key={c} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: C.accent }}>{byCat[c]}</div>
-            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{c}</div>
+      <div style={{ display: "flex", gap: 10, margin: "0 0 24px", flexWrap: "wrap" }}>
+        {[{ label: "Total", val: products.length, color: C.text }, { label: "Activos", val: products.filter(p => p.active).length, color: C.green },
+          ...PRODUCT_CATEGORIES.filter(c => c !== "Otro" && byCat[c]).map(c => ({ label: c, val: byCat[c], color: C.accent }))
+        ].map(k => (
+          <div key={k.label} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 18px", boxShadow: "0 1px 3px rgba(15,23,42,.04)", minWidth: 80, textAlign: "center" }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: k.color, letterSpacing: "-.02em" }}>{k.val}</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 3 }}>{k.label}</div>
           </div>
-        ) : null)}
+        ))}
       </div>
 
-      {/* Filters */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
         <input style={{ ...S.input, maxWidth: 220 }} placeholder="Buscar por nombre o SKU…" value={search} onChange={e => setSearch(e.target.value)} />
-        <div style={{ display: "flex", background: C.white, border: `1px solid ${C.border}`, borderRadius: 4 }}>
+        <div style={{ display: "flex", background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, padding: 3 }}>
           {(["all", ...PRODUCT_CATEGORIES] as string[]).map(f => (
             <button key={f} onClick={() => setCatFilter(f)} style={{
-              padding: "7px 14px", fontSize: 12, fontFamily: "inherit", cursor: "pointer",
-              background: catFilter === f ? C.text : "none", color: catFilter === f ? C.white : C.text2, border: "none", borderRadius: 3,
-            }}>
-              {f === "all" ? "Todos" : f}
-            </button>
+              padding: "6px 13px", fontSize: 12.5, fontFamily: "inherit", cursor: "pointer", borderRadius: 6,
+              background: catFilter === f ? C.white : "none", color: catFilter === f ? C.text : C.muted,
+              border: "none", fontWeight: catFilter === f ? 500 : 400,
+              boxShadow: catFilter === f ? "0 1px 2px rgba(15,23,42,.06)" : "none",
+            }}>{f === "all" ? "Todos" : f}</button>
           ))}
         </div>
         <span style={{ fontSize: 12, color: C.muted }}>{visible.length} producto{visible.length !== 1 ? "s" : ""}</span>
@@ -1452,43 +1447,47 @@ export default function AdminPage() {
     <div style={{ display: "flex", minHeight: "100vh", background: C.bg }}>
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
       <aside style={{
-        width: 220, flexShrink: 0, background: C.sidebar,
+        width: 232, flexShrink: 0, background: C.sidebar,
         display: "flex", flexDirection: "column",
         position: "sticky", top: 0, height: "100vh",
         overflow: "hidden",
       }}>
-        {/* Logo */}
-        <div style={{ padding: "24px 20px 20px" }}>
-          <img src="/logo-origen.svg" alt="Origen" style={{ height: 28, filter: "brightness(0) invert(1)" }} />
+        {/* Brand */}
+        <div style={{ padding: "22px 20px 18px", display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: C.white, flexShrink: 0, letterSpacing: "-.02em" }}>OT</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: C.white, lineHeight: 1.2 }}>Origen</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", letterSpacing: ".04em", textTransform: "uppercase" }}>Tostadores</div>
+          </div>
         </div>
-        <div style={{ height: 1, background: "rgba(255,255,255,.1)", marginBottom: 8 }} />
+        <div style={{ height: 1, background: "rgba(255,255,255,.07)", marginBottom: 6 }} />
 
         {/* Nav */}
-        <nav style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        <nav style={{ flex: 1, overflowY: "auto", padding: "6px 10px" }}>
           {groups.map(g => {
             const items = byGroup(g);
             if (items.length === 0) return null;
             return (
               <div key={g}>
-                {g && <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.35)", letterSpacing: ".10em", textTransform: "uppercase", padding: "14px 20px 6px" }}>{g}</div>}
+                {g && <div style={{ fontSize: 9.5, fontWeight: 600, color: "rgba(255,255,255,.28)", letterSpacing: ".12em", textTransform: "uppercase", padding: "14px 10px 5px" }}>{g}</div>}
                 {items.map(n => {
-                  const active = tab === n.key;
+                  const isActive = tab === n.key;
                   const hasBadge = n.key === "pedidos" && pendingCount > 0;
                   return (
                     <button key={n.key} onClick={() => setTab(n.key)} style={{
-                      display: "flex", alignItems: "center", gap: 10,
-                      width: "100%", padding: "10px 20px",
-                      background: active ? "rgba(196,132,58,.25)" : "none",
-                      border: "none", borderLeft: active ? `3px solid ${C.accent}` : "3px solid transparent",
-                      color: active ? C.white : "rgba(255,255,255,.6)",
-                      fontSize: 13, fontWeight: active ? 600 : 400,
+                      display: "flex", alignItems: "center", gap: 9,
+                      width: "100%", padding: "8px 10px", borderRadius: 7,
+                      background: isActive ? C.sidebarA : "none",
+                      border: "none",
+                      color: isActive ? C.white : "rgba(255,255,255,.55)",
+                      fontSize: 13, fontWeight: isActive ? 500 : 400,
                       cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                      transition: "background .15s, color .15s",
+                      marginBottom: 1, transition: "background .12s, color .12s",
                     }}>
-                      <span style={{ fontSize: 15, flexShrink: 0 }}>{n.icon}</span>
-                      <span style={{ flex: 1 }}>{n.label}</span>
+                      <span style={{ fontSize: 14, flexShrink: 0, opacity: isActive ? 1 : .75 }}>{n.icon}</span>
+                      <span style={{ flex: 1, letterSpacing: "-.01em" }}>{n.label}</span>
                       {hasBadge && (
-                        <span style={{ background: C.orange, color: C.white, borderRadius: 20, padding: "1px 7px", fontSize: 11, fontWeight: 700 }}>{pendingCount}</span>
+                        <span style={{ background: C.orange, color: C.white, borderRadius: 9999, padding: "1px 7px", fontSize: 10.5, fontWeight: 600, lineHeight: "18px" }}>{pendingCount}</span>
                       )}
                     </button>
                   );
@@ -1499,17 +1498,19 @@ export default function AdminPage() {
         </nav>
 
         {/* Footer */}
-        <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,.1)" }}>
-          <a href="/" style={{ display: "block", fontSize: 12, color: "rgba(255,255,255,.4)", textDecoration: "none", marginBottom: 10 }}>← Ir al catálogo</a>
+        <div style={{ padding: "14px 10px 16px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255,255,255,.35)", textDecoration: "none", padding: "6px 10px", marginBottom: 4 }}>
+            <span style={{ fontSize: 13 }}>←</span> Ver catálogo
+          </a>
           <button onClick={() => { sessionStorage.removeItem(KEY_AUTH); setAuthed(false); }}
-            style={{ ...S.btn, background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.5)", padding: "7px 14px", fontSize: 12, width: "100%" }}>
+            style={{ ...S.btn, background: "rgba(255,255,255,.06)", color: "rgba(255,255,255,.4)", padding: "7px 12px", fontSize: 12, width: "100%", border: "1px solid rgba(255,255,255,.08)" }}>
             Cerrar sesión
           </button>
         </div>
       </aside>
 
       {/* ── Content ──────────────────────────────────────────────────── */}
-      <main style={{ flex: 1, padding: "36px 40px 80px", overflowY: "auto" }}>
+      <main style={{ flex: 1, padding: "40px 44px 80px", overflowY: "auto", minWidth: 0 }}>
         {tab === "dashboard"    && <Dashboard orders={orders} comodatos={comodatos} clientes={clientes} />}
         {tab === "clientes"     && <ClientesSection comodatos={comodatos} clientes={clientes} orders={orders} machines={machines} molinos={molinos} onGoToComodatos={() => setTab("comodatos")} />}
         {tab === "pedidos"      && <PedidosSection orders={orders} setOrders={setOrdersP} comodatos={comodatos} clientes={clientes} />}
