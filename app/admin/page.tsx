@@ -378,9 +378,36 @@ function Dashboard({ orders, comodatos, clientes }: { orders: Order[]; comodatos
 // ══════════════════════════════════════════════════════════════════════════════
 // CLIENTES (unified)
 // ══════════════════════════════════════════════════════════════════════════════
-function ClientesSection({ comodatos, clientes, orders, machines, molinos, onGoToComodatos }: {
+function NewClientButton({ onComodato, onPropio }: { onComodato: () => void; onPropio: () => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <button style={{ ...S.btn, ...S.accent }} onClick={() => setOpen(o => !o)}>
+        + Nuevo cliente ▾
+      </button>
+      {open && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setOpen(false)} />
+          <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, zIndex: 100, background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, boxShadow: "0 8px 24px rgba(15,23,42,.12)", overflow: "hidden", minWidth: 200 }}>
+            <button onClick={() => { setOpen(false); onComodato(); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: C.text, fontFamily: "inherit" }}>
+              <div style={{ fontWeight: 500 }}>☕ Con comodato</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>Máquina entregada por vos</div>
+            </button>
+            <div style={{ height: 1, background: C.border }} />
+            <button onClick={() => { setOpen(false); onPropio(); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 16px", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: C.text, fontFamily: "inherit" }}>
+              <div style={{ fontWeight: 500 }}>🏪 Solo consumo</div>
+              <div style={{ fontSize: 11, color: C.muted, marginTop: 1 }}>Cliente con máquina propia</div>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function ClientesSection({ comodatos, clientes, orders, machines, molinos, onGoToComodatos, onGoToSoloConsumo }: {
   comodatos: ComodatoRecord[]; clientes: ClientePropio[]; orders: Order[];
-  machines: Machine[]; molinos: Molino[]; onGoToComodatos: () => void;
+  machines: Machine[]; molinos: Molino[]; onGoToComodatos: () => void; onGoToSoloConsumo: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | "comodato" | "propio">("all");
@@ -446,7 +473,7 @@ function ClientesSection({ comodatos, clientes, orders, machines, molinos, onGoT
   return (
     <div>
       <PageHeader title="Clientes" sub="Vista unificada de todos tus clientes"
-        action={<button style={{ ...S.btn, ...S.accent }} onClick={onGoToComodatos}>+ Nuevo comodato</button>} />
+        action={<NewClientButton onComodato={onGoToComodatos} onPropio={onGoToSoloConsumo} />} />
 
       {/* KPI strip */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
@@ -1379,6 +1406,79 @@ const NAV: Array<{ key: Tab; icon: string; label: string; group?: string }> = [
   { key: "molinos",      icon: "🔧", label: "Molinos",       group: "Inventario" },
 ];
 
+// ── Demo seed ─────────────────────────────────────────────────────────────────
+function buildDemoData() {
+  const id = uid;
+  const today = new Date();
+  const dateStr = (daysAgo: number) => {
+    const d = new Date(today); d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const machines: Machine[] = [
+    { id: "m1", brand: "La Marzocco", model: "Linea Mini", serial: "LM-2021-0441", status: "en_comodato", notes: "Revisión anual en diciembre", maintenances: [{ id: id(), date: dateStr(45), type: "Preventivo", description: "Cambio de juntas y limpieza de grupos", technician: "Técnico Espresso SRL" }] },
+    { id: "m2", brand: "Rancilio",    model: "Silvia Pro X",  serial: "RP-2022-1182", status: "en_comodato", notes: "", maintenances: [] },
+    { id: "m3", brand: "Breville",    model: "Oracle Touch",  serial: "BRV-2023-0093", status: "disponible", notes: "Nueva en stock", maintenances: [] },
+    { id: "m4", brand: "Victoria Arduino", model: "Black Eagle Maverick", serial: "VA-2020-0077", status: "en_comodato", notes: "", maintenances: [{ id: id(), date: dateStr(120), type: "Correctivo", description: "Reemplazo bomba de agua", technician: "Técnico Espresso SRL" }] },
+    { id: "m5", brand: "Nuova Simonelli", model: "Oscar II", serial: "NS-2022-3310", status: "mantenimiento", notes: "En reparación — falla caldera", maintenances: [] },
+  ];
+
+  const molinos: Molino[] = [
+    { id: "mo1", brand: "Baratza",   model: "Sette 270",   serial: "BZ-270-0041",  status: "en_comodato",   notes: "", maintenances: [] },
+    { id: "mo2", brand: "Eureka",    model: "Mignon Silenzio", serial: "EU-MS-0219", status: "en_comodato",   notes: "", maintenances: [{ id: id(), date: dateStr(30), type: "Limpieza", description: "Limpieza profunda de burras y cámara", technician: "Interno" }] },
+    { id: "mo3", brand: "Mahlkönig", model: "EK43",        serial: "MK-EK-0558",   status: "en_comodato",   notes: "", maintenances: [] },
+    { id: "mo4", brand: "Mazzer",    model: "Mini Elettronico", serial: "MZ-ME-0991", status: "disponible", notes: "", maintenances: [] },
+    { id: "mo5", brand: "Anfim",     model: "CAIMANO On Demand", serial: "AF-CAI-0143", status: "disponible", notes: "", maintenances: [] },
+  ];
+
+  const comodatos: ComodatoRecord[] = [
+    { id: "co1", cafeteria: "Café Amaranto", contact: "Lucía Pereyra", phone: "2616-421098", address: "San Martín 487, Mendoza", machineId: "m1", molinoId: "mo1", installDate: dateStr(210), minKgMonth: 12, coffeeType: "Colombia Huila", lastFilterChange: dateStr(65), contractSigned: true, contractFileName: "", contractFileData: "", status: "activo", notes: "" },
+    { id: "co2", cafeteria: "Roastery Palermo", contact: "Martín Goñi", phone: "11-4532-8871", address: "Thames 1904, CABA", machineId: "m2", molinoId: "mo2", installDate: dateStr(380), minKgMonth: 20, coffeeType: "Brasil Cerrado Natural", lastFilterChange: dateStr(200), contractSigned: true, contractFileName: "", contractFileData: "", status: "activo", notes: "Filtro vencido — avisar" },
+    { id: "co3", cafeteria: "Tostado Café Club", contact: "Valentina Ruiz", phone: "351-4110092", address: "Colón 230, Córdoba", machineId: "m4", molinoId: "mo3", installDate: dateStr(95), minKgMonth: 15, coffeeType: "Etiopía Yirgacheffe", lastFilterChange: dateStr(30), contractSigned: true, contractFileName: "", contractFileData: "", status: "activo", notes: "" },
+    { id: "co4", cafeteria: "Brûlée Specialty", contact: "Diego Aranda", phone: "2664-580123", address: "Rivadavia 901, San Luis", machineId: "m5", molinoId: "", installDate: dateStr(50), minKgMonth: 8, coffeeType: "Perú Cajamarca", lastFilterChange: dateStr(50), contractSigned: false, contractFileName: "", contractFileData: "", status: "suspendido", notes: "Máquina en reparación" },
+  ];
+
+  const clientes: ClientePropio[] = [
+    { id: "cl1", cafeteria: "Espresso House", contact: "Fernanda Moya", phone: "261-4990021", address: "Belgrano 1203, Mendoza", coffeeBrand: "Bolivia Caranavi", kgMonth: 6, lastFilterChange: dateStr(40), machineBrand: "Rancilio", machineModel: "Classe 5 USB", machineSerial: "RC-2019-0444", molinoBrand: "Baratza", molinoModel: "Virtuoso+", molinoSerial: "BZ-V-0871", status: "activo", notes: "" },
+    { id: "cl2", cafeteria: "Kaffa Brew Bar", contact: "Ignacio Suárez", phone: "11-6203-4421", address: "Malabia 556, CABA", coffeeBrand: "Colombia Huila", kgMonth: 9, lastFilterChange: dateStr(90), machineBrand: "Nuova Simonelli", machineModel: "Appia Life", machineSerial: "NS-AL-1022", molinoBrand: "Mazzer", molinoModel: "Mini Elettronico", molinoSerial: "MZ-ME-0312", status: "activo", notes: "" },
+    { id: "cl3", cafeteria: "La Molienda Vieja", contact: "Rosa Blanco", phone: "299-4561230", address: "Alem 740, Neuquén", coffeeBrand: "Brasil Cerrado Natural", kgMonth: 4, lastFilterChange: dateStr(195), machineBrand: "Breville", machineModel: "Barista Express", machineSerial: "BRV-BE-0551", molinoBrand: "Eureka", molinoModel: "Atom 75", molinoSerial: "EU-A75-0108", status: "activo", notes: "Cambiar filtro urgente" },
+    { id: "cl4", cafeteria: "Norte Café", contact: "Sebastián Paz", phone: "381-4219900", address: "Las Heras 308, Tucumán", coffeeBrand: "Perú Cajamarca", kgMonth: 5, lastFilterChange: dateStr(15), machineBrand: "Gaggia", machineModel: "Classic Pro", machineSerial: "GG-CP-2020-033", molinoBrand: "Baratza", molinoModel: "Preciso", molinoSerial: "BZ-P-0294", status: "activo", notes: "" },
+  ];
+
+  // Orders spread over last 30 days
+  const allClientIds = [
+    { id: "co1", name: "Café Amaranto",     type: "comodato" as const },
+    { id: "co2", name: "Roastery Palermo",  type: "comodato" as const },
+    { id: "co3", name: "Tostado Café Club", type: "comodato" as const },
+    { id: "cl1", name: "Espresso House",    type: "propio" as const },
+    { id: "cl2", name: "Kaffa Brew Bar",    type: "propio" as const },
+    { id: "cl3", name: "La Molienda Vieja", type: "propio" as const },
+    { id: "cl4", name: "Norte Café",        type: "propio" as const },
+  ];
+  const coffeeTypes = ["Colombia Huila", "Brasil Cerrado Natural", "Etiopía Yirgacheffe", "Perú Cajamarca", "Bolivia Caranavi"];
+  const statuses: Order["status"][] = ["entregado", "entregado", "entregado", "confirmado", "pendiente"];
+
+  const orders: Order[] = Array.from({ length: 20 }, (_, i) => {
+    const cli = allClientIds[i % allClientIds.length];
+    const coffee = coffeeTypes[i % coffeeTypes.length];
+    const kgQty = [2, 3, 5, 10, 12, 8, 6, 4][i % 8];
+    const hasSyrup = i % 3 === 0;
+    const lines: OrderLine[] = [
+      { id: id(), description: coffee, category: "Café", qty: kgQty, unit: "kg", unitPrice: 12500 },
+      ...(hasSyrup ? [{ id: id(), description: "Syrup Vainilla", category: "Syrups", qty: 2, unit: "botella", unitPrice: 2800 }] : []),
+    ];
+    return {
+      id: id(), date: dateStr(i * 1.5 | 0),
+      clientId: cli.id, clientName: cli.name, clientType: cli.type,
+      lines, total: lines.reduce((s, l) => s + l.qty * l.unitPrice, 0),
+      kgCafe: kgQty, status: statuses[i % statuses.length],
+      notes: i % 4 === 0 ? "Entrega en horario de tarde" : "",
+    };
+  });
+
+  return { machines, molinos, comodatos, clientes, orders };
+}
+
 export default function AdminPage() {
   const [authed, setAuthed]       = useState(false);
   const [pass, setPass]           = useState("");
@@ -1412,6 +1512,15 @@ export default function AdminPage() {
   const setMachinesP  = (l: Machine[])       => { setMachines(l);  try { localStorage.setItem(KEY_MACHINES,  JSON.stringify(l)); } catch { /**/ } };
   const setMolinosP   = (l: Molino[])        => { setMolinos(l);   try { localStorage.setItem(KEY_MOLINOS,   JSON.stringify(l)); } catch { /**/ } };
   const setOrdersP    = (l: Order[])         => { setOrders(l);    try { localStorage.setItem(KEY_ORDERS,    JSON.stringify(l)); } catch { /**/ } };
+
+  const loadDemo = () => {
+    const d = buildDemoData();
+    setMachinesP(d.machines); setMolinosP(d.molinos);
+    setComodatos(d.comodatos); try { localStorage.setItem(KEY_COMODATOS, JSON.stringify(d.comodatos)); } catch { /**/ }
+    setClientes(d.clientes);  try { localStorage.setItem(KEY_CLIENTES,  JSON.stringify(d.clientes));  } catch { /**/ }
+    setOrdersP(d.orders);
+  };
+  const hasData = machines.length + molinos.length + comodatos.length + clientes.length + orders.length > 0;
 
   const login = () => {
     if (pass === ADMIN_PASS) { sessionStorage.setItem(KEY_AUTH, "1"); setAuthed(true); }
@@ -1511,8 +1620,17 @@ export default function AdminPage() {
 
       {/* ── Content ──────────────────────────────────────────────────── */}
       <main style={{ flex: 1, padding: "40px 44px 80px", overflowY: "auto", minWidth: 0 }}>
+        {tab === "dashboard" && !hasData && (
+          <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "28px 32px", marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>Sistema vacío</div>
+              <div style={{ fontSize: 13, color: C.muted }}>Cargá datos de ejemplo para ver cómo funciona el panel con información real.</div>
+            </div>
+            <button style={{ ...S.btn, ...S.primary, whiteSpace: "nowrap" }} onClick={loadDemo}>Cargar datos demo</button>
+          </div>
+        )}
         {tab === "dashboard"    && <Dashboard orders={orders} comodatos={comodatos} clientes={clientes} />}
-        {tab === "clientes"     && <ClientesSection comodatos={comodatos} clientes={clientes} orders={orders} machines={machines} molinos={molinos} onGoToComodatos={() => setTab("comodatos")} />}
+        {tab === "clientes"     && <ClientesSection comodatos={comodatos} clientes={clientes} orders={orders} machines={machines} molinos={molinos} onGoToComodatos={() => setTab("comodatos")} onGoToSoloConsumo={() => setTab("solo-consumo")} />}
         {tab === "pedidos"      && <PedidosSection orders={orders} setOrders={setOrdersP} comodatos={comodatos} clientes={clientes} />}
         {tab === "comodatos"    && <ComodatosSection records={comodatos} setRecords={setComodatos} machines={machines} molinos={molinos} />}
         {tab === "solo-consumo" && <SoloConsumoSection clientes={clientes} setClientes={setClientes} />}
