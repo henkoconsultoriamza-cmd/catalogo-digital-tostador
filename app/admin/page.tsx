@@ -8,7 +8,7 @@ const KEY_MOLINOS   = "origen_molinos_v1";
 const KEY_COMODATOS = "origen_comodatos_v2";
 const KEY_CLIENTES  = "origen_clientes_v1";
 const KEY_AUTH      = "origen_admin_auth";
-const ADMIN_PASS    = process.env.NEXT_PUBLIC_ADMIN_PASS ?? "admin123";
+const ADMIN_PASS    = process.env.NEXT_PUBLIC_ADMIN_PASS || "admin123";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type EquipStatus = "disponible" | "en_comodato" | "mantenimiento" | "baja";
@@ -117,7 +117,7 @@ const badge = (color: string, text: string) => (
   }}>{text}</span>
 );
 
-const Field = ({ label, children, half }: { label: string; children: React.ReactNode; half?: boolean }) => (
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div style={{ marginBottom: 14 }}>
     <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5A3E28", marginBottom: 5, letterSpacing: ".04em" }}>{label}</label>
     {children}
