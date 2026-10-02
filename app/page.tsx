@@ -538,6 +538,113 @@ function CartDrawer({
   );
 }
 
+// ── Hero Banner ───────────────────────────────────────────────────────────────
+function HeroBanner({ onScrollToProducts }: { onScrollToProducts: () => void }) {
+  return (
+    <section style={{
+      position: "relative",
+      width: "100%",
+      height: "clamp(320px, 42vw, 520px)",
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+    }}>
+      {/* Imagen de fondo */}
+      <img
+        src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1920&q=80"
+        alt=""
+        aria-hidden
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 60%",
+        }}
+      />
+      {/* Overlay oscuro cálido — igual que Narom pero en tonos café */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(120deg, rgba(26,10,3,0.92) 0%, rgba(26,10,3,0.72) 55%, rgba(26,10,3,0.50) 100%)",
+      }} />
+      {/* Línea decorativa inferior — mismo detalle que Narom */}
+      <div style={{
+        position: "absolute", bottom: 0, left: "5%", right: "5%",
+        height: 1, background: "rgba(196,132,58,0.3)",
+      }} />
+
+      {/* Contenido */}
+      <div style={{
+        position: "relative", zIndex: 10,
+        maxWidth: 1280, width: "100%", margin: "0 auto",
+        padding: "0 clamp(20px, 5vw, 80px)",
+      }}>
+        <p style={{
+          margin: "0 0 14px",
+          color: "rgba(196,132,58,0.85)",
+          fontSize: 11, fontWeight: 700, letterSpacing: ".25em",
+          textTransform: "uppercase",
+        }}>
+          CATÁLOGO MAYORISTA · TEMPORADA 2025
+        </p>
+        <h1 style={{
+          margin: "0 0 16px",
+          color: "#ffffff",
+          fontSize: "clamp(30px, 4.5vw, 64px)",
+          fontWeight: 800,
+          lineHeight: 1.08,
+          letterSpacing: "-.02em",
+          maxWidth: 620,
+        }}>
+          Café de especialidad<br />
+          <span style={{ color: "#C4843A" }}>desde el origen</span>
+        </h1>
+        <p style={{
+          margin: "0 0 28px",
+          color: "rgba(255,255,255,0.55)",
+          fontSize: "clamp(14px, 1.4vw, 17px)",
+          lineHeight: 1.6,
+          maxWidth: 440,
+        }}>
+          Granos, syrups, salsas y accesorios para cafeterías. Precios mayoristas, entrega semanal.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <button
+            onClick={onScrollToProducts}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              background: "#C4843A", color: "#fff",
+              border: "none", borderRadius: 999,
+              padding: "13px 26px",
+              fontSize: 14, fontWeight: 700, letterSpacing: ".03em",
+              cursor: "pointer",
+              transition: "background .2s",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#B0733A")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#C4843A")}
+          >
+            Ver catálogo
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12h14M14 7l5 5-5 5"/>
+            </svg>
+          </button>
+          <a
+            href="/admin"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              border: "1px solid rgba(255,255,255,0.30)", color: "#fff",
+              borderRadius: 999, padding: "12px 22px",
+              fontSize: 14, fontWeight: 500, textDecoration: "none",
+              transition: "border-color .2s, color .2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#C4843A"; e.currentTarget.style.color = "#C4843A"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.30)"; e.currentTarget.style.color = "#fff"; }}
+          >
+            Acceso distribuidores
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CatalogPage() {
   const settings = DEFAULT_APP_SETTINGS;
@@ -606,6 +713,13 @@ export default function CatalogPage() {
   }, []);
 
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+  const catStripRef = useCallback((el: HTMLDivElement | null) => {
+    if (el) (window as Window & { _catStrip?: HTMLDivElement })._catStrip = el;
+  }, []);
+  const scrollToProducts = useCallback(() => {
+    const el = (window as Window & { _catStrip?: HTMLDivElement })._catStrip;
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -687,8 +801,11 @@ export default function CatalogPage() {
         </div>
       </header>
 
+      {/* ── Hero Banner ────────────────────────────────────────────── */}
+      <HeroBanner onScrollToProducts={scrollToProducts} />
+
       {/* ── Category tabs ──────────────────────────────────────────── */}
-      <div style={{ background: "#fff", borderBottom: "1px solid var(--border)" }}>
+      <div ref={catStripRef} style={{ background: "#fff", borderBottom: "1px solid var(--border)" }}>
         <div className="cat-strip" style={{
           maxWidth: 1280, margin: "0 auto",
           display: "flex", padding: "0 40px",
