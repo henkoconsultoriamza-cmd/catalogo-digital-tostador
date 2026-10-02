@@ -160,6 +160,17 @@ function Dashboard({ orders, comodatos, clientes }: { orders: Order[]; comodatos
   const catRevenue: Record<string, number> = {};
   mOrders.forEach(o => o.lines.forEach(l => { catRevenue[l.category] = (catRevenue[l.category] ?? 0) + l.qty * l.unitPrice; }));
 
+  // kg por tipo de café: agrupa por descripción de líneas con categoría "Café" y unidad "kg"
+  const kgByCoffee: Record<string, number> = {};
+  mOrders.forEach(o =>
+    o.lines.filter(l => l.category === "Café" && l.unit === "kg").forEach(l => {
+      const key = (l.description || "Sin nombre").trim();
+      kgByCoffee[key] = (kgByCoffee[key] ?? 0) + l.qty;
+    })
+  );
+  const coffeeRanking = Object.entries(kgByCoffee).sort((a, b) => b[1] - a[1]);
+  const totalKgCoffee = coffeeRanking.reduce((s, [, v]) => s + v, 0);
+
   const monthLabel = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" });
 
   return (
@@ -218,6 +229,42 @@ function Dashboard({ orders, comodatos, clientes }: { orders: Order[]; comodatos
               ))
           }
         </div>
+      </div>
+
+      {/* Kg por tipo de café */}
+      <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: 22, marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 20 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Kg por tipo de café</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>este mes</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: C.accent }}>{totalKgCoffee.toFixed(1)} kg total</span>
+          </div>
+        </div>
+        {coffeeRanking.length === 0
+          ? <p style={{ fontSize: 13, color: C.muted }}>Sin pedidos de café este mes</p>
+          : coffeeRanking.map(([name, kg], i) => {
+              const pct = totalKgCoffee > 0 ? (kg / totalKgCoffee) * 100 : 0;
+              const colors = [C.accent, "#8B6030", C.text2, C.muted, "#A08060"];
+              const col = colors[Math.min(i, colors.length - 1)];
+              return (
+                <div key={name} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: "50%", background: col, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{name}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <span style={{ fontSize: 11, color: C.muted }}>{pct.toFixed(1)}%</span>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: col, minWidth: 60, textAlign: "right" }}>{kg.toFixed(1)} kg</span>
+                    </div>
+                  </div>
+                  <div style={{ background: "#EAE4DC", borderRadius: 4, height: 6 }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: col, borderRadius: 4, transition: "width .4s" }} />
+                  </div>
+                </div>
+              );
+            })
+        }
       </div>
 
       {/* Revenue by category */}
