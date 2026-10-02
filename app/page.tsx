@@ -541,7 +541,25 @@ function CartDrawer({
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function CatalogPage() {
   const settings = DEFAULT_APP_SETTINGS;
-  const [products] = useState<Product[]>(DEFAULT_PRODUCTS);
+  const [products] = useState<Product[]>(() => {
+    try {
+      const saved = typeof window !== "undefined" ? localStorage.getItem("origen_products_v1") : null;
+      if (saved) {
+        const raw = JSON.parse(saved);
+        if (Array.isArray(raw) && raw.length > 0) {
+          return raw
+            .filter((p: { active?: boolean }) => p.active !== false)
+            .map((p: { specs?: Array<{ key: string; value: string }> | Record<string, string>; [key: string]: unknown }) => ({
+              ...p,
+              specs: Array.isArray(p.specs)
+                ? Object.fromEntries(p.specs.map((s: { key: string; value: string }) => [s.key, s.value]))
+                : (p.specs ?? {}),
+            })) as Product[];
+        }
+      }
+    } catch { /* empty */ }
+    return DEFAULT_PRODUCTS;
+  });
   const [cat, setCat] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);

@@ -8,6 +8,7 @@ const KEY_MOLINOS   = "origen_molinos_v1";
 const KEY_COMODATOS = "origen_comodatos_v2";
 const KEY_CLIENTES  = "origen_clientes_v1";
 const KEY_ORDERS    = "origen_orders_v1";
+const KEY_PRODUCTS  = "origen_products_v1";
 const KEY_AUTH      = "origen_admin_auth";
 const ADMIN_PASS    = process.env.NEXT_PUBLIC_ADMIN_PASS || "admin123";
 
@@ -31,6 +32,15 @@ type ClientePropio = {
   machineBrand: string; machineModel: string; machineSerial: string;
   molinoBrand: string; molinoModel: string; molinoSerial: string;
   status: "activo" | "inactivo"; notes: string;
+};
+
+type AdminProduct = {
+  id: string; sku: string; name: string; category: string; description: string;
+  price: number; salePrice?: number; minQty: number;
+  image: string; imageColor: string; imageIcon: string;
+  tag?: string; onSale?: boolean;
+  specs: Array<{ key: string; value: string }>;
+  active: boolean;
 };
 
 type OrderLine = { id: string; description: string; category: string; qty: number; unit: string; unitPrice: number };
@@ -1085,9 +1095,283 @@ function EquipSection<T extends Machine | Molino>({ items, setItems, storageKey,
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PRODUCTOS
+// ══════════════════════════════════════════════════════════════════════════════
+const PRODUCT_CATEGORIES = ["Café", "Syrups", "Salsas", "Accesorios", "Otro"];
+const EMOJI_OPTIONS = ["☕","🍶","🍫","🌰","🍓","🍯","🌿","🥛","🍮","🔧","📏","🌡️","🫙","🧃","🍵","📦","⭐","🎯"];
+
+const BLANK_PRODUCT: Omit<AdminProduct, "id"> = {
+  sku: "", name: "", category: "Café", description: "",
+  price: 0, salePrice: undefined, minQty: 1,
+  image: "", imageColor: "#C4843A", imageIcon: "☕",
+  tag: "", onSale: false, specs: [], active: true,
+};
+
+function ProductosSection({ products, setProducts }: { products: AdminProduct[]; setProducts: (v: AdminProduct[]) => void }) {
+  const [adding, setAdding]     = useState(false);
+  const [editing, setEditing]   = useState<string | null>(null);
+  const [catFilter, setCatFilter] = useState("all");
+  const [search, setSearch]     = useState("");
+
+  const persist = (l: AdminProduct[]) => {
+    setProducts(l);
+    try { localStorage.setItem(KEY_PRODUCTS, JSON.stringify(l)); } catch { /**/ }
+  };
+  const onSave  = (d: Omit<AdminProduct, "id">) => { persist([...products, { ...d, id: uid() }]); setAdding(false); };
+  const onEdit  = (d: Omit<AdminProduct, "id">) => { persist(products.map(p => p.id === editing ? { ...d, id: editing! } : p)); setEditing(null); };
+  const onDel   = (id: string) => { if (!confirm("¿Eliminar producto?")) return; persist(products.filter(p => p.id !== id)); };
+  const toggle  = (id: string) => persist(products.map(p => p.id === id ? { ...p, active: !p.active } : p));
+
+  const visible = products
+    .filter(p => catFilter === "all" || p.category === catFilter)
+    .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
+
+  const byCat: Record<string, number> = {};
+  products.forEach(p => { byCat[p.category] = (byCat[p.category] ?? 0) + 1; });
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+        <div>
+          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Productos</h1>
+          <p style={{ fontSize: 13, color: C.muted, marginTop: 2 }}>Catálogo visible en la tienda — los cambios se reflejan en tiempo real</p>
+        </div>
+        <button style={{ ...S.btn, ...S.accent }} onClick={() => { setAdding(true); setEditing(null); }}>+ Agregar producto</button>
+      </div>
+
+      {/* Category KPIs */}
+      <div style={{ display: "flex", gap: 12, margin: "20px 0", flexWrap: "wrap" }}>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>{products.length}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Total</div>
+        </div>
+        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
+          <div style={{ fontSize: 22, fontWeight: 700, color: C.green }}>{products.filter(p => p.active).length}</div>
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Activos</div>
+        </div>
+        {PRODUCT_CATEGORIES.filter(c => c !== "Otro").map(c => byCat[c] ? (
+          <div key={c} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 8, padding: "12px 18px", textAlign: "center", minWidth: 90 }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.accent }}>{byCat[c]}</div>
+            <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{c}</div>
+          </div>
+        ) : null)}
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+        <input style={{ ...S.input, maxWidth: 220 }} placeholder="Buscar por nombre o SKU…" value={search} onChange={e => setSearch(e.target.value)} />
+        <div style={{ display: "flex", background: C.white, border: `1px solid ${C.border}`, borderRadius: 4 }}>
+          {(["all", ...PRODUCT_CATEGORIES] as string[]).map(f => (
+            <button key={f} onClick={() => setCatFilter(f)} style={{
+              padding: "7px 14px", fontSize: 12, fontFamily: "inherit", cursor: "pointer",
+              background: catFilter === f ? C.text : "none", color: catFilter === f ? C.white : C.text2, border: "none", borderRadius: 3,
+            }}>
+              {f === "all" ? "Todos" : f}
+            </button>
+          ))}
+        </div>
+        <span style={{ fontSize: 12, color: C.muted }}>{visible.length} producto{visible.length !== 1 ? "s" : ""}</span>
+      </div>
+
+      {adding && <ProductForm onSave={onSave} onCancel={() => setAdding(false)} />}
+
+      {visible.length === 0 && !adding && (
+        <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>🛍️</div>
+          <p style={{ marginBottom: 16 }}>Sin productos cargados</p>
+          <p style={{ fontSize: 12 }}>El catálogo mostrará los productos de ejemplo hasta que cargues los tuyos</p>
+        </div>
+      )}
+
+      {visible.map(p => editing === p.id
+        ? <ProductForm key={p.id} initial={p} onSave={onEdit} onCancel={() => setEditing(null)} />
+        : (
+          <div key={p.id} style={{ ...S.card, opacity: p.active ? 1 : .55 }}>
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+              {/* Thumbnail */}
+              <div style={{
+                width: 68, height: 68, borderRadius: 6, flexShrink: 0, overflow: "hidden",
+                background: p.imageColor || "#EAE4DC", display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {p.image
+                  ? <img src={p.image} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <span style={{ fontSize: 28 }}>{p.imageIcon}</span>
+                }
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>{p.name}</span>
+                  <Badge color={C.text2} text={p.category} />
+                  {!p.active && <Badge color={C.muted} text="Oculto" />}
+                  {p.tag && <Badge color={C.accent} text={p.tag} />}
+                  {p.onSale && <Badge color={C.green} text="Oferta" />}
+                </div>
+                <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>SKU: {p.sku || "—"}</div>
+                {p.description && <p style={{ fontSize: 13, color: C.text2, marginBottom: 8, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.description}</p>}
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <InfoChip label="Precio" value={`$ ${p.price.toLocaleString("es-AR")}`} accent />
+                  {p.salePrice && p.salePrice > 0 && <InfoChip label="Precio oferta" value={`$ ${p.salePrice.toLocaleString("es-AR")}`} />}
+                  <InfoChip label="Mínimo" value={`${p.minQty} ${p.minQty === 1 ? "unidad" : "unidades"}`} />
+                  {p.specs.length > 0 && <InfoChip label="Especificaciones" value={`${p.specs.length} campo${p.specs.length !== 1 ? "s" : ""}`} />}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, flexShrink: 0 }}>
+                <button style={{ ...S.btn, ...(p.active ? S.ghost : { ...S.ghost, borderColor: C.green, color: C.green }), padding: "6px 14px", fontSize: 12 }} onClick={() => toggle(p.id)}>
+                  {p.active ? "Ocultar" : "Publicar"}
+                </button>
+                <button style={{ ...S.btn, ...S.ghost, padding: "6px 14px", fontSize: 12 }} onClick={() => { setEditing(p.id); setAdding(false); }}>Editar</button>
+                <button style={{ ...S.btn, ...S.danger, padding: "6px 14px", fontSize: 12 }} onClick={() => onDel(p.id)}>Eliminar</button>
+              </div>
+            </div>
+          </div>
+        )
+      )}
+    </div>
+  );
+}
+
+// ── Product form ──────────────────────────────────────────────────────────────
+function ProductForm({ initial, onSave, onCancel }: {
+  initial?: AdminProduct;
+  onSave: (d: Omit<AdminProduct, "id">) => void;
+  onCancel: () => void;
+}) {
+  const [form, setForm] = useState<Omit<AdminProduct, "id">>(initial
+    ? { ...BLANK_PRODUCT, ...initial }
+    : { ...BLANK_PRODUCT }
+  );
+  const set = (k: keyof Omit<AdminProduct, "id" | "specs" | "onSale" | "active">) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }));
+
+  const setSpec = (i: number, k: "key" | "value", v: string) =>
+    setForm(f => ({ ...f, specs: f.specs.map((s, j) => j === i ? { ...s, [k]: v } : s) }));
+  const addSpec  = () => setForm(f => ({ ...f, specs: [...f.specs, { key: "", value: "" }] }));
+  const delSpec  = (i: number) => setForm(f => ({ ...f, specs: f.specs.filter((_, j) => j !== i) }));
+
+  return (
+    <div style={S.form}>
+      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 18 }}>{initial ? "Editar producto" : "Nuevo producto"}</h3>
+
+      {/* Basic */}
+      <Grid>
+        <Field label="Nombre *"><input style={S.input} value={form.name} onChange={set("name")} placeholder="ej. Colombia Huila 1 kg" /></Field>
+        <Field label="SKU"><input style={S.input} value={form.sku} onChange={set("sku")} placeholder="ej. CF-COL-1KG" /></Field>
+        <Field label="Categoría">
+          <select style={S.select} value={form.category} onChange={set("category")}>
+            {PRODUCT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </Field>
+        <Field label="Etiqueta (tag)"><input style={S.input} value={form.tag ?? ""} onChange={set("tag")} placeholder="ej. Nuevo · Más vendido · Temporada" /></Field>
+      </Grid>
+
+      <Field label="Descripción">
+        <textarea style={{ ...S.input, height: 80, resize: "vertical" }} value={form.description} onChange={set("description")} placeholder="Descripción para el catálogo" />
+      </Field>
+
+      <div style={S.divider} />
+
+      {/* Pricing */}
+      <div style={S.sectionLabel}>Precio y disponibilidad</div>
+      <Grid>
+        <Field label="Precio *"><input style={S.input} type="number" min={0} value={form.price} onChange={e => setForm(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))} /></Field>
+        <Field label="Precio oferta"><input style={S.input} type="number" min={0} value={form.salePrice ?? ""} placeholder="Dejar vacío si no aplica"
+          onChange={e => setForm(f => ({ ...f, salePrice: e.target.value ? parseFloat(e.target.value) : undefined }))} /></Field>
+        <Field label="Cantidad mínima"><input style={S.input} type="number" min={1} value={form.minQty} onChange={e => setForm(f => ({ ...f, minQty: parseInt(e.target.value) || 1 }))} /></Field>
+        <Field label="Estado">
+          <div style={{ display: "flex", gap: 20, marginTop: 10 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
+              <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} style={{ width: 15, height: 15 }} />
+              Visible en catálogo
+            </label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
+              <input type="checkbox" checked={!!form.onSale} onChange={e => setForm(f => ({ ...f, onSale: e.target.checked }))} style={{ width: 15, height: 15 }} />
+              En oferta
+            </label>
+          </div>
+        </Field>
+      </Grid>
+
+      <div style={S.divider} />
+
+      {/* Image */}
+      <div style={S.sectionLabel}>Imagen</div>
+      <Grid>
+        <Field label="URL de imagen" span2>
+          <input style={S.input} value={form.image} onChange={set("image")} placeholder="https://… (Unsplash, tu CDN, etc.)" />
+        </Field>
+        <Field label="Color de fondo (hex)">
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="color" value={form.imageColor} onChange={e => setForm(f => ({ ...f, imageColor: e.target.value }))}
+              style={{ width: 40, height: 36, border: "none", borderRadius: 4, cursor: "pointer", padding: 2 }} />
+            <input style={{ ...S.input, maxWidth: 110 }} value={form.imageColor} onChange={set("imageColor")} />
+          </div>
+        </Field>
+        <Field label="Ícono (si no hay imagen)">
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+            {EMOJI_OPTIONS.map(e => (
+              <button key={e} type="button" onClick={() => setForm(f => ({ ...f, imageIcon: e }))}
+                style={{ fontSize: 20, padding: 4, cursor: "pointer", background: form.imageIcon === e ? C.accent + "30" : "none", border: form.imageIcon === e ? `2px solid ${C.accent}` : "2px solid transparent", borderRadius: 4 }}>
+                {e}
+              </button>
+            ))}
+          </div>
+        </Field>
+      </Grid>
+
+      {/* Preview */}
+      {(form.image || form.imageIcon) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "10px 0 18px", padding: "12px 16px", background: "#F5F0E8", borderRadius: 6 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: "hidden", background: form.imageColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {form.image
+              ? <img src={form.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              : <span style={{ fontSize: 26 }}>{form.imageIcon}</span>
+            }
+          </div>
+          <div>
+            <div style={{ fontWeight: 600 }}>{form.name || "Nombre del producto"}</div>
+            <div style={{ fontSize: 13, color: C.accent, fontWeight: 700 }}>$ {(form.salePrice && form.onSale ? form.salePrice : form.price).toLocaleString("es-AR")}</div>
+          </div>
+        </div>
+      )}
+
+      <div style={S.divider} />
+
+      {/* Specs */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+        <div style={S.sectionLabel}>Especificaciones</div>
+        <button style={{ ...S.btn, ...S.ghost, padding: "5px 12px", fontSize: 12 }} onClick={addSpec}>+ Agregar</button>
+      </div>
+      {form.specs.length === 0
+        ? <p style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>Sin especificaciones — aparecerán en el detalle del producto</p>
+        : form.specs.map((sp, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 2fr auto", gap: 10, marginBottom: 10, alignItems: "center" }}>
+            <input style={S.input} value={sp.key} onChange={e => setSpec(i, "key", e.target.value)} placeholder="ej. Origen" />
+            <input style={S.input} value={sp.value} onChange={e => setSpec(i, "value", e.target.value)} placeholder="ej. Colombia Huila" />
+            <button onClick={() => delSpec(i)} style={{ background: "none", border: "none", color: "#CCC", fontSize: 18, cursor: "pointer", padding: "0 4px" }}>×</button>
+          </div>
+        ))
+      }
+
+      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+        <button style={{ ...S.btn, ...S.primary }} disabled={!form.name.trim() || form.price <= 0}
+          onClick={() => form.name.trim() && form.price > 0 && onSave(form)}>
+          Guardar
+        </button>
+        <button style={{ ...S.btn, ...S.ghost }} onClick={onCancel}>Cancelar</button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN
 // ══════════════════════════════════════════════════════════════════════════════
-type Tab = "dashboard" | "clientes" | "pedidos" | "comodatos" | "solo-consumo" | "maquinas" | "molinos";
+type Tab = "dashboard" | "clientes" | "pedidos" | "comodatos" | "solo-consumo" | "maquinas" | "molinos" | "productos";
 
 const NAV: Array<{ key: Tab; icon: string; label: string; group?: string }> = [
   { key: "dashboard",    icon: "◎",  label: "Dashboard" },
@@ -1095,6 +1379,7 @@ const NAV: Array<{ key: Tab; icon: string; label: string; group?: string }> = [
   { key: "comodatos",    icon: "☕", label: "Comodatos",     group: "Clientes" },
   { key: "solo-consumo", icon: "🏪", label: "Solo consumo",  group: "Clientes" },
   { key: "pedidos",      icon: "📦", label: "Pedidos",       group: "Operaciones" },
+  { key: "productos",    icon: "🛍️", label: "Productos",     group: "Catálogo" },
   { key: "maquinas",     icon: "⚙️", label: "Máquinas",      group: "Inventario" },
   { key: "molinos",      icon: "🔧", label: "Molinos",       group: "Inventario" },
 ];
@@ -1109,6 +1394,7 @@ export default function AdminPage() {
   const [comodatos, setComodatos] = useState<ComodatoRecord[]>([]);
   const [clientes, setClientes]   = useState<ClientePropio[]>([]);
   const [orders, setOrders]       = useState<Order[]>([]);
+  const [products, setProducts]   = useState<AdminProduct[]>([]);
 
   useEffect(() => {
     if (sessionStorage.getItem(KEY_AUTH) === "1") setAuthed(true);
@@ -1118,11 +1404,13 @@ export default function AdminPage() {
       const c  = localStorage.getItem(KEY_COMODATOS);
       const cl = localStorage.getItem(KEY_CLIENTES);
       const or = localStorage.getItem(KEY_ORDERS);
+      const pr = localStorage.getItem(KEY_PRODUCTS);
       if (m)  setMachines(JSON.parse(m));
       if (mo) setMolinos(JSON.parse(mo));
       if (c)  setComodatos(JSON.parse(c));
       if (cl) setClientes(JSON.parse(cl));
       if (or) setOrders(JSON.parse(or));
+      if (pr) setProducts(JSON.parse(pr));
     } catch { /* empty */ }
   }, []);
 
@@ -1157,7 +1445,7 @@ export default function AdminPage() {
   const pendingCount = orders.filter(o => o.status === "pendiente").length;
 
   // Group nav items
-  const groups = ["", "Clientes", "Operaciones", "Inventario"];
+  const groups = ["", "Clientes", "Operaciones", "Catálogo", "Inventario"];
   const byGroup = (g: string) => NAV.filter(n => (n.group ?? "") === g);
 
   return (
@@ -1227,6 +1515,7 @@ export default function AdminPage() {
         {tab === "pedidos"      && <PedidosSection orders={orders} setOrders={setOrdersP} comodatos={comodatos} clientes={clientes} />}
         {tab === "comodatos"    && <ComodatosSection records={comodatos} setRecords={setComodatos} machines={machines} molinos={molinos} />}
         {tab === "solo-consumo" && <SoloConsumoSection clientes={clientes} setClientes={setClientes} />}
+        {tab === "productos"    && <ProductosSection products={products} setProducts={setProducts} />}
         {tab === "maquinas"     && <EquipSection items={machines} setItems={setMachinesP} storageKey={KEY_MACHINES} noun="máquina" title="Máquinas" description="Stock de máquinas de espresso disponibles y en comodato" />}
         {tab === "molinos"      && <EquipSection items={molinos} setItems={setMolinosP} storageKey={KEY_MOLINOS} noun="molino" title="Molinos" description="Stock de molinos disponibles y en comodato" />}
       </main>
