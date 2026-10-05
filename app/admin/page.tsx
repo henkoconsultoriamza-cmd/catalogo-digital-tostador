@@ -1576,8 +1576,22 @@ export default function AdminPage() {
           <div style={{ width: "100%", maxWidth: 360 }}>
 
             {/* Logo */}
-            <div style={{ marginBottom: 52 }}>
-              <img src="/logo-origen.svg" alt="Origen Tostadores" style={{ height: 80, display: "block" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 52 }}>
+              <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="26" cy="26" rx="19" ry="24" fill="url(#g1)"/>
+                <path d="M26 4 C32 12 34 19 34 26 C34 33 32 40 26 48" stroke="#7A3D0A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                <defs>
+                  <linearGradient id="g1" x1="10" y1="4" x2="42" y2="48" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#E8A050"/>
+                    <stop offset="50%" stopColor="#C4843A"/>
+                    <stop offset="100%" stopColor="#8B4F18"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 26, fontWeight: 800, color: "#1A0F05", letterSpacing: "-.01em", lineHeight: 1, fontFamily: "Georgia, 'Times New Roman', serif" }}>ORIGEN</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#C4843A", letterSpacing: ".28em", textTransform: "uppercase" }}>TOSTADORES</span>
+              </div>
             </div>
 
             {/* Heading */}
