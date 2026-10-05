@@ -1529,21 +1529,41 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "48px 52px", width: 360, boxShadow: "0 8px 32px rgba(26,14,5,.08)" }}>
-          <img src="/logo-origen.svg" alt="Origen" style={{ height: 36, margin: "0 auto 32px" }} />
-          <h1 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, textAlign: "center" }}>Panel de administración</h1>
-          <Field label="Contraseña">
-            <input style={{ ...S.input, ...(passErr ? { borderColor: C.red } : {}) }}
-              type="password" placeholder="••••••••" value={pass}
-              onChange={e => { setPass(e.target.value); setPassErr(false); }}
-              onKeyDown={e => e.key === "Enter" && login()} />
-            {passErr && <p style={{ fontSize: 12, color: C.red, marginTop: 5 }}>Contraseña incorrecta</p>}
-          </Field>
-          <button style={{ ...S.btn, ...S.primary, width: "100%", padding: 13, fontSize: 14 }} onClick={login}>Ingresar</button>
-          <div style={{ marginTop: 20, padding: "10px 14px", background: C.accentL, borderRadius: 8, border: `1px solid ${C.accent}30`, textAlign: "center" }}>
-            <p style={{ fontSize: 11, color: C.muted, marginBottom: 3, textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 600 }}>Acceso demo</p>
-            <p style={{ fontSize: 14, fontWeight: 700, color: C.accent, letterSpacing: ".04em" }}>{ADMIN_PASS}</p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "stretch" }}>
+        {/* Left panel — coffee image */}
+        <div style={{
+          flex: "0 0 45%", position: "relative", overflow: "hidden",
+          backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=85')",
+          backgroundSize: "cover", backgroundPosition: "center",
+        }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(20,10,3,.72) 0%, rgba(60,30,10,.55) 100%)" }} />
+          <div style={{ position: "relative", zIndex: 1, padding: "48px 44px", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+            <p style={{ color: "rgba(255,255,255,.55)", fontSize: 12, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>Sistema de gestión</p>
+            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: "-.02em", marginBottom: 10 }}>Origen<br/>Tostadores</h2>
+            <p style={{ color: "rgba(255,255,255,.45)", fontSize: 13, lineHeight: 1.6 }}>Catálogo · Pedidos · Clientes · Comodatos</p>
+          </div>
+        </div>
+
+        {/* Right panel — form */}
+        <div style={{ flex: 1, background: "#FAFAFA", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px" }}>
+          <div style={{ width: "100%", maxWidth: 340 }}>
+            <img src="/logo-origen.svg" alt="Origen" style={{ height: 40, display: "block", marginBottom: 36 }} />
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-.03em", marginBottom: 6 }}>Panel de administración</h1>
+            <p style={{ fontSize: 13.5, color: C.muted, marginBottom: 32 }}>Ingresá tu contraseña para continuar.</p>
+            <Field label="Contraseña">
+              <input style={{ ...S.input, fontSize: 15, padding: "11px 14px", ...(passErr ? { borderColor: C.red } : {}) }}
+                type="password" placeholder="••••••••" value={pass}
+                onChange={e => { setPass(e.target.value); setPassErr(false); }}
+                onKeyDown={e => e.key === "Enter" && login()} autoFocus />
+              {passErr && <p style={{ fontSize: 12, color: C.red, marginTop: 5 }}>Contraseña incorrecta</p>}
+            </Field>
+            <button style={{ ...S.btn, ...S.primary, width: "100%", padding: 14, fontSize: 14.5, letterSpacing: "-.01em", fontWeight: 600, borderRadius: 8, marginTop: 4 }} onClick={login}>
+              Ingresar →
+            </button>
+            <div style={{ marginTop: 24, padding: "12px 16px", background: "#FEF9F3", borderRadius: 8, border: `1px solid ${C.accent}40` }}>
+              <p style={{ fontSize: 10.5, color: C.muted, marginBottom: 4, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>Acceso demo</p>
+              <p style={{ fontSize: 16, fontWeight: 800, color: C.accent, letterSpacing: ".06em" }}>{ADMIN_PASS}</p>
+            </div>
           </div>
         </div>
       </div>
