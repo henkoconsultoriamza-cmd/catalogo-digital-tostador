@@ -1543,10 +1543,10 @@ export default function AdminPage() {
             position: "absolute", inset: 0,
             backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=85')",
             backgroundSize: "cover", backgroundPosition: "center",
-            opacity: 0.35,
+            opacity: 0.65,
           }} />
-          {/* Gradient overlay */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0F0A06 30%, transparent 100%)" }} />
+          {/* Gradient overlay — dark at bottom for text legibility, lighter at top */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,5,2,.95) 0%, rgba(10,5,2,.45) 55%, rgba(10,5,2,.15) 100%)" }} />
 
           {/* Content */}
           <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", padding: "44px 48px" }}>
