@@ -1541,6 +1541,10 @@ export default function AdminPage() {
             {passErr && <p style={{ fontSize: 12, color: C.red, marginTop: 5 }}>Contraseña incorrecta</p>}
           </Field>
           <button style={{ ...S.btn, ...S.primary, width: "100%", padding: 13, fontSize: 14 }} onClick={login}>Ingresar</button>
+          <div style={{ marginTop: 20, padding: "10px 14px", background: C.accentL, borderRadius: 8, border: `1px solid ${C.accent}30`, textAlign: "center" }}>
+            <p style={{ fontSize: 11, color: C.muted, marginBottom: 3, textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 600 }}>Acceso demo</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.accent, letterSpacing: ".04em" }}>{ADMIN_PASS}</p>
+          </div>
         </div>
       </div>
     );
