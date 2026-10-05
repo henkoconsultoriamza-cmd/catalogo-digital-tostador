@@ -1529,41 +1529,120 @@ export default function AdminPage() {
 
   if (!authed) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "stretch" }}>
-        {/* Left panel — coffee image */}
+      <div style={{
+        minHeight: "100vh", display: "flex", alignItems: "stretch",
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}>
+        {/* ── Left: dark coffee panel ─────────────────────────────────── */}
         <div style={{
-          flex: "0 0 45%", position: "relative", overflow: "hidden",
-          backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=85')",
-          backgroundSize: "cover", backgroundPosition: "center",
+          flex: "0 0 46%", position: "relative", overflow: "hidden",
+          background: "#0F0A06",
         }}>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(20,10,3,.72) 0%, rgba(60,30,10,.55) 100%)" }} />
-          <div style={{ position: "relative", zIndex: 1, padding: "48px 44px", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-            <p style={{ color: "rgba(255,255,255,.55)", fontSize: 12, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 10, fontWeight: 600 }}>Sistema de gestión</p>
-            <h2 style={{ color: "#fff", fontSize: 28, fontWeight: 800, lineHeight: 1.2, letterSpacing: "-.02em", marginBottom: 10 }}>Origen<br/>Tostadores</h2>
-            <p style={{ color: "rgba(255,255,255,.45)", fontSize: 13, lineHeight: 1.6 }}>Catálogo · Pedidos · Clientes · Comodatos</p>
+          {/* Coffee photo as background */}
+          <div style={{
+            position: "absolute", inset: 0,
+            backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=85')",
+            backgroundSize: "cover", backgroundPosition: "center",
+            opacity: 0.35,
+          }} />
+          {/* Gradient overlay */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0F0A06 30%, transparent 100%)" }} />
+
+          {/* Content */}
+          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", padding: "44px 48px" }}>
+            {/* Top: logo mark */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.accent }} />
+              <span style={{ color: "rgba(255,255,255,.35)", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 600 }}>Sistema de gestión</span>
+            </div>
+
+            {/* Bottom: brand */}
+            <div>
+              <div style={{ fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: C.accent, fontWeight: 700, marginBottom: 14 }}>Origen · Tostadores</div>
+              <h2 style={{ fontSize: 34, fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: "-.03em", marginBottom: 16 }}>
+                Gestioná tu<br/>negocio de café<br/>en un solo lugar.
+              </h2>
+              <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
+                {["Catálogo", "Pedidos", "Clientes", "Comodatos"].map(t => (
+                  <span key={t} style={{ fontSize: 11.5, color: "rgba(255,255,255,.38)", fontWeight: 500 }}>{t}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right panel — form */}
-        <div style={{ flex: 1, background: "#FAFAFA", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 32px" }}>
-          <div style={{ width: "100%", maxWidth: 340 }}>
-            <img src="/logo-origen.svg" alt="Origen" style={{ height: 40, display: "block", marginBottom: 36 }} />
-            <h1 style={{ fontSize: 24, fontWeight: 800, color: C.text, letterSpacing: "-.03em", marginBottom: 6 }}>Panel de administración</h1>
-            <p style={{ fontSize: 13.5, color: C.muted, marginBottom: 32 }}>Ingresá tu contraseña para continuar.</p>
-            <Field label="Contraseña">
-              <input style={{ ...S.input, fontSize: 15, padding: "11px 14px", ...(passErr ? { borderColor: C.red } : {}) }}
+        {/* ── Right: login form ────────────────────────────────────────── */}
+        <div style={{ flex: 1, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 40px" }}>
+          <div style={{ width: "100%", maxWidth: 360 }}>
+
+            {/* Logo */}
+            <img src="/logo-origen.svg" alt="Origen Tostadores" style={{ height: 38, display: "block", marginBottom: 44 }} />
+
+            {/* Heading */}
+            <div style={{ marginBottom: 36 }}>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#0F172A", letterSpacing: "-.04em", lineHeight: 1.2, marginBottom: 8 }}>
+                Bienvenido de vuelta
+              </h1>
+              <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.5 }}>
+                Ingresá tu contraseña para acceder al panel.
+              </p>
+            </div>
+
+            {/* Password field */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 7, letterSpacing: ".01em" }}>
+                Contraseña
+              </label>
+              <input
+                style={{
+                  width: "100%", border: `1.5px solid ${passErr ? C.red : "#E2E8F0"}`,
+                  borderRadius: 8, padding: "12px 14px", fontSize: 15,
+                  outline: "none", background: "#fff", color: "#0F172A",
+                  fontFamily: "inherit", transition: "border-color .15s, box-shadow .15s",
+                  boxSizing: "border-box",
+                }}
                 type="password" placeholder="••••••••" value={pass}
                 onChange={e => { setPass(e.target.value); setPassErr(false); }}
-                onKeyDown={e => e.key === "Enter" && login()} autoFocus />
-              {passErr && <p style={{ fontSize: 12, color: C.red, marginTop: 5 }}>Contraseña incorrecta</p>}
-            </Field>
-            <button style={{ ...S.btn, ...S.primary, width: "100%", padding: 14, fontSize: 14.5, letterSpacing: "-.01em", fontWeight: 600, borderRadius: 8, marginTop: 4 }} onClick={login}>
-              Ingresar →
-            </button>
-            <div style={{ marginTop: 24, padding: "12px 16px", background: "#FEF9F3", borderRadius: 8, border: `1px solid ${C.accent}40` }}>
-              <p style={{ fontSize: 10.5, color: C.muted, marginBottom: 4, textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>Acceso demo</p>
-              <p style={{ fontSize: 16, fontWeight: 800, color: C.accent, letterSpacing: ".06em" }}>{ADMIN_PASS}</p>
+                onKeyDown={e => e.key === "Enter" && login()}
+                autoFocus
+              />
+              {passErr && <p style={{ fontSize: 12, color: C.red, marginTop: 6, fontWeight: 500 }}>Contraseña incorrecta. Intentá de nuevo.</p>}
             </div>
+
+            {/* Submit */}
+            <button
+              onClick={login}
+              style={{
+                width: "100%", padding: "13px 0", fontSize: 14.5, fontWeight: 700,
+                background: "#0F172A", color: "#fff", border: "none", borderRadius: 8,
+                cursor: "pointer", fontFamily: "inherit", letterSpacing: "-.01em",
+                transition: "opacity .15s",
+              }}
+            >
+              Ingresar al panel
+            </button>
+
+            {/* Demo badge */}
+            <div style={{
+              marginTop: 28, padding: "14px 18px",
+              background: "#FFFBF5", borderRadius: 10,
+              border: "1.5px dashed #E8C99A",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div>
+                <p style={{ fontSize: 10.5, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 3 }}>
+                  Acceso demo
+                </p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: C.accent, letterSpacing: ".04em", fontFamily: "monospace" }}>
+                  {ADMIN_PASS}
+                </p>
+              </div>
+              <div style={{ fontSize: 24 }}>☕</div>
+            </div>
+
+            <p style={{ marginTop: 32, fontSize: 11.5, color: "#CBD5E1", textAlign: "center" }}>
+              © {new Date().getFullYear()} Origen Tostadores · Panel interno
+            </p>
           </div>
         </div>
       </div>
