@@ -1576,7 +1576,9 @@ export default function AdminPage() {
           <div style={{ width: "100%", maxWidth: 360 }}>
 
             {/* Logo */}
-            <img src="/logo-origen.svg" alt="Origen Tostadores" style={{ height: 38, display: "block", marginBottom: 44 }} />
+            <div style={{ marginBottom: 52 }}>
+              <img src="/logo-origen.svg" alt="Origen Tostadores" style={{ height: 80, display: "block" }} />
+            </div>
 
             {/* Heading */}
             <div style={{ marginBottom: 36 }}>
