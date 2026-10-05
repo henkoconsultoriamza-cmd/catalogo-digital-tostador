@@ -1530,78 +1530,102 @@ export default function AdminPage() {
   if (!authed) {
     return (
       <div style={{
-        minHeight: "100vh", display: "flex", alignItems: "stretch",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        minHeight: "100vh",
+        background: "#F7F3EE",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+        padding: "24px",
       }}>
-        {/* ── Left: dark coffee panel ─────────────────────────────────── */}
         <div style={{
-          flex: "0 0 46%", position: "relative", overflow: "hidden",
-          background: "#0F0A06",
+          display: "flex", width: "100%", maxWidth: 900,
+          borderRadius: 20, overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(60,30,10,.18), 0 2px 8px rgba(60,30,10,.08)",
         }}>
-          {/* Coffee photo as background */}
+
+          {/* ── LEFT: foto + marca ─────────────────────────────────────── */}
           <div style={{
-            position: "absolute", inset: 0,
-            backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=85')",
+            flex: "0 0 46%", position: "relative", minHeight: 580,
+            backgroundImage: "url('https://images.unsplash.com/photo-1690983323458-ec4a54fc9552?w=900&q=90')",
             backgroundSize: "cover", backgroundPosition: "center",
-            opacity: 0.65,
-          }} />
-          {/* Gradient overlay — dark at bottom for text legibility, lighter at top */}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(10,5,2,.95) 0%, rgba(10,5,2,.45) 55%, rgba(10,5,2,.15) 100%)" }} />
+          }}>
+            {/* Overlay oscuro cálido */}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(15,8,2,.55) 0%, rgba(15,8,2,.82) 100%)" }} />
 
-          {/* Content */}
-          <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", padding: "44px 48px" }}>
-            {/* Top: logo mark */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.accent }} />
-              <span style={{ color: "rgba(255,255,255,.35)", fontSize: 11, letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 600 }}>Sistema de gestión</span>
-            </div>
+            <div style={{ position: "relative", zIndex: 1, height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "40px 40px 44px" }}>
+              {/* Top badge */}
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,.08)", backdropFilter: "blur(8px)", borderRadius: 99, padding: "6px 14px", width: "fit-content", border: "1px solid rgba(255,255,255,.12)" }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#C4843A" }} />
+                <span style={{ color: "rgba(255,255,255,.7)", fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", fontWeight: 600 }}>Sistema de gestión</span>
+              </div>
 
-            {/* Bottom: brand */}
-            <div>
-              <div style={{ fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: C.accent, fontWeight: 700, marginBottom: 14 }}>Origen · Tostadores</div>
-              <h2 style={{ fontSize: 34, fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: "-.03em", marginBottom: 16 }}>
-                Gestioná tu<br/>negocio de café<br/>en un solo lugar.
-              </h2>
-              <div style={{ display: "flex", gap: 20, marginTop: 8 }}>
-                {["Catálogo", "Pedidos", "Clientes", "Comodatos"].map(t => (
-                  <span key={t} style={{ fontSize: 11.5, color: "rgba(255,255,255,.38)", fontWeight: 500 }}>{t}</span>
-                ))}
+              {/* Bottom: brand block */}
+              <div>
+                <div style={{ fontSize: 10.5, letterSpacing: ".22em", textTransform: "uppercase", color: "#C4843A", fontWeight: 700, marginBottom: 12 }}>Origen · Tostadores</div>
+                <h2 style={{ fontSize: 30, fontWeight: 800, color: "#fff", lineHeight: 1.18, letterSpacing: "-.02em", marginBottom: 20 }}>
+                  Todo tu negocio<br/>de café, en<br/>un solo lugar.
+                </h2>
+                <div style={{ height: 1, background: "rgba(255,255,255,.12)", marginBottom: 20 }} />
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[["📋", "Catálogo de productos"], ["📦", "Gestión de pedidos"], ["👥", "Clientes y comodatos"]].map(([icon, label]) => (
+                    <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ fontSize: 14 }}>{icon}</span>
+                      <span style={{ fontSize: 12.5, color: "rgba(255,255,255,.55)", fontWeight: 400 }}>{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Right: login form ────────────────────────────────────────── */}
-        <div style={{ flex: 1, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 40px" }}>
-          <div style={{ width: "100%", maxWidth: 360 }}>
+          {/* ── RIGHT: formulario ─────────────────────────────────────── */}
+          <div style={{
+            flex: 1, background: "#fff",
+            display: "flex", flexDirection: "column", justifyContent: "center",
+            padding: "52px 48px",
+          }}>
 
-            {/* Logo */}
-            <div style={{ marginBottom: 52 }}>
-              <img src="/logo-origen.svg" alt="Origen Tostadores" style={{ height: 80, display: "block" }} />
+            {/* Logo custom */}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 44 }}>
+              {/* Bean SVG inline */}
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="24" cy="24" rx="18" ry="22" fill="#C4843A"/>
+                <ellipse cx="24" cy="24" rx="18" ry="22" fill="url(#beanGrad)"/>
+                <path d="M24 4 Q30 12 30 24 Q30 36 24 44" stroke="#8B5A1A" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+                <defs>
+                  <linearGradient id="beanGrad" x1="10" y1="4" x2="38" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#E8A050"/>
+                    <stop offset="100%" stopColor="#9B5C1A"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "#1A0F05", letterSpacing: "-.01em", lineHeight: 1 }}>ORIGEN</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#C4843A", letterSpacing: ".22em", textTransform: "uppercase", marginTop: 3 }}>TOSTADORES</div>
+              </div>
             </div>
 
             {/* Heading */}
-            <div style={{ marginBottom: 36 }}>
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#0F172A", letterSpacing: "-.04em", lineHeight: 1.2, marginBottom: 8 }}>
+            <div style={{ marginBottom: 32 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1A0F05", letterSpacing: "-.03em", lineHeight: 1.2, marginBottom: 6 }}>
                 Bienvenido de vuelta
               </h1>
-              <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.5 }}>
-                Ingresá tu contraseña para acceder al panel.
+              <p style={{ fontSize: 13.5, color: "#94A3B8", lineHeight: 1.5 }}>
+                Ingresá tu contraseña para acceder al panel de administración.
               </p>
             </div>
 
-            {/* Password field */}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 7, letterSpacing: ".01em" }}>
+            {/* Password */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: 11.5, fontWeight: 600, color: "#475569", marginBottom: 7, letterSpacing: ".04em", textTransform: "uppercase" }}>
                 Contraseña
               </label>
               <input
                 style={{
                   width: "100%", border: `1.5px solid ${passErr ? C.red : "#E2E8F0"}`,
-                  borderRadius: 8, padding: "12px 14px", fontSize: 15,
-                  outline: "none", background: "#fff", color: "#0F172A",
-                  fontFamily: "inherit", transition: "border-color .15s, box-shadow .15s",
-                  boxSizing: "border-box",
+                  borderRadius: 10, padding: "12px 16px", fontSize: 15,
+                  outline: "none", background: "#FAFAFA", color: "#1A0F05",
+                  fontFamily: "inherit", boxSizing: "border-box",
+                  transition: "border-color .15s, box-shadow .15s",
                 }}
                 type="password" placeholder="••••••••" value={pass}
                 onChange={e => { setPass(e.target.value); setPassErr(false); }}
@@ -1612,37 +1636,41 @@ export default function AdminPage() {
             </div>
 
             {/* Submit */}
-            <button
-              onClick={login}
-              style={{
-                width: "100%", padding: "13px 0", fontSize: 14.5, fontWeight: 700,
-                background: "#0F172A", color: "#fff", border: "none", borderRadius: 8,
-                cursor: "pointer", fontFamily: "inherit", letterSpacing: "-.01em",
-                transition: "opacity .15s",
-              }}
-            >
+            <button onClick={login} style={{
+              width: "100%", padding: "13px 0", fontSize: 14, fontWeight: 700,
+              background: "linear-gradient(135deg, #1A0F05 0%, #3D1F08 100%)",
+              color: "#fff", border: "none", borderRadius: 10,
+              cursor: "pointer", fontFamily: "inherit", letterSpacing: ".01em",
+              boxShadow: "0 4px 14px rgba(26,15,5,.25)",
+            }}>
               Ingresar al panel
             </button>
 
-            {/* Demo badge */}
+            {/* Demo */}
             <div style={{
-              marginTop: 28, padding: "14px 18px",
-              background: "#FFFBF5", borderRadius: 10,
-              border: "1.5px dashed #E8C99A",
+              marginTop: 24, padding: "14px 18px",
+              background: "linear-gradient(135deg, #FEF9F3 0%, #FDF3E7 100%)",
+              borderRadius: 12, border: "1px solid #F0D5A8",
               display: "flex", alignItems: "center", justifyContent: "space-between",
             }}>
               <div>
-                <p style={{ fontSize: 10.5, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 3 }}>
-                  Acceso demo
-                </p>
-                <p style={{ fontSize: 18, fontWeight: 800, color: C.accent, letterSpacing: ".04em", fontFamily: "monospace" }}>
-                  {ADMIN_PASS}
-                </p>
+                <p style={{ fontSize: 10, fontWeight: 700, color: "#B8906A", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 4 }}>Acceso demo</p>
+                <p style={{ fontSize: 19, fontWeight: 800, color: "#C4843A", letterSpacing: ".06em", fontFamily: "monospace" }}>{ADMIN_PASS}</p>
               </div>
-              <div style={{ fontSize: 24 }}>☕</div>
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <ellipse cx="16" cy="16" rx="12" ry="14.5" fill="#C4843A" opacity=".18"/>
+                <ellipse cx="16" cy="16" rx="12" ry="14.5" fill="url(#b2)"/>
+                <path d="M16 3 Q20 9 20 16 Q20 23 16 29" stroke="#8B5A1A" strokeWidth="1.4" fill="none" strokeLinecap="round"/>
+                <defs>
+                  <linearGradient id="b2" x1="7" y1="3" x2="25" y2="29" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#E8A050" stopOpacity=".5"/>
+                    <stop offset="100%" stopColor="#9B5C1A" stopOpacity=".5"/>
+                  </linearGradient>
+                </defs>
+              </svg>
             </div>
 
-            <p style={{ marginTop: 32, fontSize: 11.5, color: "#CBD5E1", textAlign: "center" }}>
+            <p style={{ marginTop: 28, fontSize: 11, color: "#CBD5E1", textAlign: "center" }}>
               © {new Date().getFullYear()} Origen Tostadores · Panel interno
             </p>
           </div>
